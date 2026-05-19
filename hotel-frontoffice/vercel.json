@@ -4,13 +4,9 @@
   "framework": "vite",
   "outputDirectory": "dist",
 
-  "env": {
-    "VITE_API_URL": "@vite_api_url"
-  },
-
   "rewrites": [
     {
-      "source": "/((?!assets/|favicon.ico|icons.svg).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
@@ -56,3 +52,4 @@
 
   "cleanUrls": true
 }
+

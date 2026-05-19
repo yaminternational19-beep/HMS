@@ -10,8 +10,6 @@ export default defineConfig({
     // Output directory where Vercel will serve files from
     outDir: 'dist',
     
-    // Generate source maps in production for debugging
-    sourcemap: true,
     
     // Performance hints - warn if chunks are too large
     chunkSizeWarningLimit: 1000,
