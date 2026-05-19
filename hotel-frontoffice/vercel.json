@@ -1,0 +1,76 @@
+{
+  "buildCommand": "vite build",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "outputDirectory": "dist",
+
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  },
+
+  "rewrites": [
+    {
+      "source": "/((?!_next/static|_next/image|favicon.ico).*)",
+      "destination": "/index.html"
+    }
+  ],
+
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.css$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+
+  "cleanUrls": true,
+
+  "_comments": {
+    "buildCommand": "Runs 'npm run build' which executes Vite build process",
+    "outputDirectory": "Vite outputs compiled files to 'dist' folder - Vercel serves from here",
+    "rewrites_spa": "Critical for SPA routing! All requests (except static assets) route to index.html so React Router can handle navigation. Prevents 404 errors on page refresh/direct URL access",
+    "headers_index": "Never cache index.html to ensure users get latest app version. Always revalidate from server",
+    "headers_assets": "Cache versioned assets (CSS/JS with content hash) for 1 year since Vite creates new hashes on code changes",
+    "cleanUrls": "Removes .html extension from URLs for cleaner routing (e.g., /dashboard instead of /dashboard.html)",
+    "supported_routes": [
+      "/",
+      "/dashboard",
+      "/login",
+      "/bookings",
+      "/checkinout",
+      "/invoices",
+      "/rooms"
+    ]
+  }
+}
