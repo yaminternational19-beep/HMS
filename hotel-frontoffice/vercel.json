@@ -10,7 +10,7 @@
 
   "rewrites": [
     {
-      "source": "/((?!_next/static|_next/image|favicon.ico).*)",
+      "source": "/((?!assets/|favicon.ico|icons.svg).*)",
       "destination": "/index.html"
     }
   ],
