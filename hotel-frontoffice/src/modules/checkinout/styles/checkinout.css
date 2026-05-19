@@ -1,0 +1,51 @@
+/* ================================================
+   Guest Operations Module — Check-In / Check-Out
+   ================================================ */
+
+/* Page Layout */
+.ops-page { @apply space-y-6 w-full max-w-7xl mx-auto; }
+.ops-header { @apply flex flex-col sm:flex-row justify-between sm:items-end gap-4; }
+.ops-title { @apply text-2xl tablet:text-3xl font-extrabold text-slate-900 tracking-tight; }
+.ops-subtitle { @apply text-sm text-slate-500 mt-1; }
+.ops-date-badge { @apply text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full border border-indigo-200; }
+
+
+/* Workspace */
+.ops-workspace { @apply bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden; }
+.ops-tab-bar { @apply flex border-b border-slate-200; }
+.ops-tab { @apply flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold border-b-2 transition-all cursor-pointer; }
+.ops-tab-active { @apply border-indigo-600 text-indigo-600 bg-indigo-50/50; }
+.ops-tab-inactive { @apply border-transparent text-slate-400 hover:text-slate-700 hover:bg-slate-50; }
+.ops-tab-badge { @apply text-[10px] font-black px-1.5 py-0.5 rounded-full; }
+.ops-tab-badge-active { @apply bg-primary text-white; }
+.ops-tab-badge-inactive { @apply bg-slate-200 text-slate-500; }
+
+/* List */
+.ops-list-header { @apply px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50; }
+.ops-list-title { @apply font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2; }
+
+/* Guest Row */
+.ops-guest-row { @apply flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-5 border-b border-slate-100 last:border-0 hover:bg-blue-50/30 transition-colors gap-4; }
+.ops-guest-avatar { @apply h-11 w-11 rounded-full flex items-center justify-center text-white text-base font-black shrink-0; }
+.ops-guest-name { @apply font-bold text-slate-900 text-sm; }
+.ops-guest-sub { @apply text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5; }
+.ops-guest-sub-dot { @apply w-1 h-1 bg-slate-300 rounded-full; }
+.ops-actions { @apply flex items-center gap-2 flex-wrap; }
+
+/* Badges */
+.ops-badge { @apply px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border; }
+.ops-badge-success { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
+.ops-badge-done { @apply bg-slate-100 text-slate-500 border-slate-200; }
+.ops-badge-warning { @apply bg-amber-50 text-amber-700 border-amber-200; }
+.ops-badge-danger { @apply bg-red-50 text-red-600 border-red-200; }
+.ops-badge-vip { @apply bg-violet-50 text-violet-700 border-violet-200; }
+
+/* Balance Alert */
+.ops-balance-alert { @apply flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border; }
+.ops-balance-due { @apply bg-red-50 text-red-600 border-red-200; }
+.ops-balance-clear { @apply bg-emerald-50 text-emerald-600 border-emerald-200; }
+
+/* Empty State */
+.ops-empty { @apply py-16 flex flex-col items-center justify-center text-slate-400; }
+.ops-empty-icon { @apply w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300; }
+.ops-empty-text { @apply text-sm font-semibold text-slate-400 mt-2; }

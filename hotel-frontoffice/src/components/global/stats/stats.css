@@ -1,0 +1,170 @@
+/* ==========================================================================
+   Unified Global Stats Components styling system
+   ========================================================================== */
+
+/* Grid container */
+.g-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .g-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .g-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Card container */
+.g-stat-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 7.25rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.g-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  border-color: #cbd5e1;
+}
+
+/* Card body layout */
+.g-stat-card-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.g-stat-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Title typography */
+.g-stat-title {
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Value typography */
+.g-stat-value {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Icon container size & styling */
+.g-stat-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 0.75rem;
+  border-width: 1.5px;
+  border-style: solid;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+/* Card Footer */
+.g-stat-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.g-stat-trend {
+  font-weight: 700;
+}
+
+.g-stat-trend-up {
+  color: #16a34a;
+}
+
+.g-stat-trend-down {
+  color: #dc2626;
+}
+
+.g-stat-trend-neutral {
+  color: #475569;
+}
+
+.g-stat-subtitle {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Theme configurations */
+.g-stat-theme-indigo {
+  background-color: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+.g-stat-theme-emerald {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.g-stat-theme-amber {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.g-stat-theme-red {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.g-stat-theme-blue {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+.g-stat-theme-yellow {
+  background-color: #fefce8;
+  border-color: #fef08a;
+  color: #a16207;
+}
+
+.g-stat-theme-purple {
+  background-color: #faf5ff;
+  border-color: #e9d5ff;
+  color: #7e22ce;
+}
+
+.g-stat-theme-slate {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}

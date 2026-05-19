@@ -1,0 +1,132 @@
+import { INVOICE_STATUS, PAYMENT_METHOD } from '../modules/invoices/constants/invoiceStatus';
+
+export const INVOICES = [
+  {
+    id: 'INV-2026-001',
+    bookingId: 'BKG-065',
+    guestName: 'Emma Davis',
+    phone: '+1 555-0112',
+    roomNumber: '302',
+    roomType: 'Deluxe King',
+    checkIn: '2026-05-15',
+    checkOut: '2026-05-19',
+    nights: 4,
+    lineItems: [
+      { description: 'Room Rent (4 nights × ₹4,500)', amount: 18000 },
+      { description: 'Room Service — Dinner (2×)', amount: 1400 },
+      { description: 'Minibar Charges', amount: 600 },
+      { description: 'Laundry', amount: 350 }
+    ],
+    subTotal: 20350,
+    discount: 500,
+    gst: 1827,
+    totalAmount: 21677,
+    paidAmount: 21677,
+    balanceDue: 0,
+    status: INVOICE_STATUS.PAID,
+    paymentMethod: PAYMENT_METHOD.CARD,
+    issuedDate: '2026-05-19',
+    paidDate: '2026-05-19'
+  },
+  {
+    id: 'INV-2026-002',
+    bookingId: 'BKG-068',
+    guestName: 'Robert Wilson',
+    phone: '+1 555-0198',
+    roomNumber: '110',
+    roomType: 'Standard Queen',
+    checkIn: '2026-05-17',
+    checkOut: '2026-05-19',
+    nights: 2,
+    lineItems: [
+      { description: 'Room Rent (2 nights × ₹2,800)', amount: 5600 },
+      { description: 'Breakfast (2 days)', amount: 600 }
+    ],
+    subTotal: 6200,
+    discount: 0,
+    gst: 558,
+    totalAmount: 6758,
+    paidAmount: 5000,
+    balanceDue: 1758,
+    status: INVOICE_STATUS.PARTIAL,
+    paymentMethod: PAYMENT_METHOD.CASH,
+    issuedDate: '2026-05-19',
+    paidDate: null
+  },
+  {
+    id: 'INV-2026-003',
+    bookingId: 'BKG-070',
+    guestName: 'Linda Taylor',
+    phone: '+1 555-0321',
+    roomNumber: '405',
+    roomType: 'Executive Suite',
+    checkIn: '2026-05-12',
+    checkOut: '2026-05-19',
+    nights: 7,
+    lineItems: [
+      { description: 'Suite Rent (7 nights × ₹9,500)', amount: 66500 },
+      { description: 'Airport Transfer', amount: 1500 },
+      { description: 'Spa & Wellness', amount: 4200 },
+      { description: 'Room Service (Multiple)', amount: 3800 }
+    ],
+    subTotal: 76000,
+    discount: 3000,
+    gst: 6570,
+    totalAmount: 79570,
+    paidAmount: 79570,
+    balanceDue: 0,
+    status: INVOICE_STATUS.PAID,
+    paymentMethod: PAYMENT_METHOD.UPI,
+    issuedDate: '2026-05-19',
+    paidDate: '2026-05-19'
+  },
+  {
+    id: 'INV-2026-004',
+    bookingId: 'BKG-055',
+    guestName: 'James Patel',
+    phone: '+91 98765-43210',
+    roomNumber: '208',
+    roomType: 'Standard Queen',
+    checkIn: '2026-05-10',
+    checkOut: '2026-05-12',
+    nights: 2,
+    lineItems: [
+      { description: 'Room Rent (2 nights × ₹2,800)', amount: 5600 }
+    ],
+    subTotal: 5600,
+    discount: 0,
+    gst: 504,
+    totalAmount: 6104,
+    paidAmount: 0,
+    balanceDue: 6104,
+    status: INVOICE_STATUS.OVERDUE,
+    paymentMethod: null,
+    issuedDate: '2026-05-12',
+    paidDate: null
+  },
+  {
+    id: 'INV-2026-005',
+    bookingId: 'BKG-042',
+    guestName: 'Priya Sharma',
+    phone: '+91 91234-56789',
+    roomNumber: '315',
+    roomType: 'Deluxe King',
+    checkIn: '2026-05-08',
+    checkOut: '2026-05-11',
+    nights: 3,
+    lineItems: [
+      { description: 'Room Rent (3 nights × ₹4,500)', amount: 13500 },
+      { description: 'Room Service — Breakfast', amount: 750 }
+    ],
+    subTotal: 14250,
+    discount: 750,
+    gst: 1215,
+    totalAmount: 14715,
+    paidAmount: 14715,
+    balanceDue: 0,
+    status: INVOICE_STATUS.PAID,
+    paymentMethod: PAYMENT_METHOD.RAZORPAY,
+    issuedDate: '2026-05-11',
+    paidDate: '2026-05-11'
+  }
+];

@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "./styles/responsive.css";
+@import "./styles/global-table.css";
+
+:root {
+  --color-primary: #0f172a;
+  /* Deep slate/navy for text and sidebar background */
+  --color-secondary: #1e293b;
+  /* Slate 800 */
+  --color-accent: #ca8a04;
+  /* Premium Amber/Gold for high-end luxury feel */
+  --color-text-main: #0f172a;
+  /* Deep slate text */
+  --color-text-muted: #64748b;
+  /* Subdued slate text */
+  --color-bg-main: #f5f7fa;
+  /* Premium lightweight soft slate background */
+  --color-bg-card: #ffffff;
+  /* Pure white card backgrounds */
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* Box sizing rules & Root setup */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Responsive html and body */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    @apply text-text-main bg-bg-main font-sans;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Typography defaults */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold tracking-tight text-primary;
+  }
+
+  h1 {
+    @apply text-3xl tablet:text-4xl laptop:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl tablet:text-3xl laptop:text-4xl;
+  }
+
+  h3 {
+    @apply text-xl tablet:text-2xl laptop:text-3xl;
+  }
+
+  p {
+    @apply text-base text-text-muted leading-relaxed;
+  }
+
+  /* Media defaults */
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    @apply block max-w-full h-auto;
+  }
+
+  /* Form Element Reset */
+  input,
+  button,
+  textarea,
+  select {
+    font-family: inherit;
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+
+  /* Clean Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+}
+
+/* Premium Modal Entrance Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
