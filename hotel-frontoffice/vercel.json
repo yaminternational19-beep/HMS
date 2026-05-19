@@ -54,23 +54,5 @@
     }
   ],
 
-  "cleanUrls": true,
-
-  "_comments": {
-    "buildCommand": "Runs 'npm run build' which executes Vite build process",
-    "outputDirectory": "Vite outputs compiled files to 'dist' folder - Vercel serves from here",
-    "rewrites_spa": "Critical for SPA routing! All requests (except static assets) route to index.html so React Router can handle navigation. Prevents 404 errors on page refresh/direct URL access",
-    "headers_index": "Never cache index.html to ensure users get latest app version. Always revalidate from server",
-    "headers_assets": "Cache versioned assets (CSS/JS with content hash) for 1 year since Vite creates new hashes on code changes",
-    "cleanUrls": "Removes .html extension from URLs for cleaner routing (e.g., /dashboard instead of /dashboard.html)",
-    "supported_routes": [
-      "/",
-      "/dashboard",
-      "/login",
-      "/bookings",
-      "/checkinout",
-      "/invoices",
-      "/rooms"
-    ]
-  }
+  "cleanUrls": true
 }
