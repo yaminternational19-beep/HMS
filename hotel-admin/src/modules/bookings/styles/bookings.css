@@ -1,0 +1,43 @@
+/* Booking module specific styles */
+.booking-status-badge {
+  @apply px-3 py-1 rounded-full text-xs font-semibold;
+}
+
+/* Booking Filters */
+.booking-filters-container { @apply p-4 w-full bg-white border-b border-slate-200/80; }
+.booking-filters-wrapper {
+  @apply flex flex-nowrap items-center gap-2.5 overflow-x-auto w-full;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.booking-filters-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.booking-search-container { @apply relative flex items-center min-w-[200px] grow tablet:grow-0; }
+.booking-search-icon { @apply absolute left-3 text-slate-400; }
+.booking-search-input { @apply w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-sm text-text-main font-medium focus:border-accent outline-none bg-white hover:border-slate-300 transition-colors shadow-sm; }
+.booking-filter-select-container { @apply min-w-[150px] grow tablet:grow-0; }
+.booking-filter-select { @apply w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-sm text-text-main font-medium focus:border-accent outline-none bg-white hover:border-slate-300 transition-colors cursor-pointer shadow-sm; }
+.booking-filter-actions { @apply ml-auto tablet:ml-0 flex items-center gap-2.5; }
+
+/* Booking Page */
+.booking-page-container { @apply space-y-6 w-full max-w-7xl mx-auto; }
+.booking-header-wrapper { @apply flex justify-between items-center w-full px-1 py-2; }
+.booking-header-title { @apply text-2xl font-extrabold text-slate-900; }
+.booking-header-subtitle { @apply text-sm text-text-muted mt-1; }
+.booking-workspace-container { @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden w-full; }
+
+
+/* Booking Modal */
+.booking-modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4; }
+.booking-modal-container { @apply bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col; }
+.booking-modal-header { @apply flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-slate-50/50; }
+.booking-modal-header-title { @apply flex items-center gap-2 text-red-600; }
+.booking-modal-header-icon { @apply p-1.5 bg-red-50 text-red-600 rounded-lg; }
+.booking-modal-header-text { @apply text-base font-bold text-slate-900; }
+.booking-modal-body { @apply p-5 space-y-4; }
+.booking-modal-text { @apply text-sm text-slate-600 leading-relaxed; }
+.booking-modal-label { @apply text-xs font-semibold text-slate-600; }
+.booking-modal-select { @apply w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 outline-none bg-white cursor-pointer shadow-sm focus:border-red-500 transition-colors; }
+.booking-modal-textarea { @apply w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 outline-none bg-white shadow-sm focus:border-red-500 transition-colors; }
+.booking-modal-footer { @apply flex gap-2 pt-2 border-t border-slate-100 justify-end; }
