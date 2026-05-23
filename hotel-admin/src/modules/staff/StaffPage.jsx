@@ -1,153 +1,520 @@
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Mail, 
-  Phone, 
-  Shield, 
-  Calendar, 
-  Edit, 
-  Trash2, 
-  UserCheck, 
-  AlertCircle 
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import StaffFilters from './components/StaffFilters';
+import StaffStats from './components/StaffStats';
+import StaffTable from './components/StaffTable';
+import OnboardStaffForm from './components/OnboardStaffForm';
+import StaffLogModal from './components/StaffLogModal';
+import './styles/staff.css';
 
+// Rich Mock data for Staff with pre-populated checkin logs
 const initialStaff = [
-  { id: 'STF-01', name: 'Praveen Reddy', role: 'Corporate Director', dept: 'Administration', email: 'praveen@hms.com', phone: '+971 50 123 4567', status: 'active', joined: 'Oct 2021' },
-  { id: 'STF-02', name: 'Sarah Connor', role: 'Front Desk Manager', dept: 'Front Office', email: 'sarah.c@hms.com', phone: '+971 50 234 5678', status: 'active', joined: 'Jan 2022' },
-  { id: 'STF-03', name: 'John Doe', role: 'Concierge Clerk', dept: 'Front Office', email: 'john.doe@hms.com', phone: '+971 50 345 6789', status: 'active', joined: 'Jun 2023' },
-  { id: 'STF-04', name: 'Maria Gonzalez', role: 'Executive Housekeeper', dept: 'Housekeeping', email: 'maria.g@hms.com', phone: '+971 50 456 7890', status: 'active', joined: 'Mar 2022' },
-  { id: 'STF-05', name: 'David Smith', role: 'Maintenance Lead', dept: 'Maintenance', email: 'david.s@hms.com', phone: '+971 50 567 8901', status: 'on-leave', joined: 'Aug 2020' },
-  { id: 'STF-06', name: 'Alex Wong', role: 'Head Chef', dept: 'Food & Beverage', email: 'alex.w@hms.com', phone: '+971 50 678 9012', status: 'active', joined: 'Nov 2022' },
+  { 
+    id: 'STF-01', 
+    name: 'Praveen Reddy', 
+    role: 'Corporate Director', 
+    dept: 'Administration', 
+    email: 'praveen@hms.com', 
+    phone: '+971 50 123 4567', 
+    status: 'active', 
+    joined: 'Oct 2021',
+    isCheckedIn: true,
+    lastCheckIn: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(), // 3.5 hours ago
+    details: 'Senior executive managing HMS hotel operations, property integrations, and compliance architectures.',
+    address: 'Villa 12, Palm Jumeirah, Dubai, UAE',
+    govtProofType: 'Passport',
+    govtProofId: 'DXB-983726-P',
+    govtProofFileName: 'passport_scan_praveen.pdf',
+    govtProofFileUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop',
+    logs: [
+      { id: 101, date: 'May 22, 2026', checkIn: '08:30 AM', checkOut: '06:00 PM', duration: '9h 30m' },
+      { id: 102, date: 'May 21, 2026', checkIn: '08:45 AM', checkOut: '05:45 PM', duration: '9h 00m' }
+    ]
+  },
+  { 
+    id: 'STF-02', 
+    name: 'Sarah Connor', 
+    role: 'Front Desk Manager', 
+    dept: 'Front Office', 
+    email: 'sarah.c@hms.com', 
+    phone: '+971 50 234 5678', 
+    status: 'active', 
+    joined: 'Jan 2022',
+    isCheckedIn: false,
+    lastCheckIn: null,
+    details: 'Expert front-office liaison supervisor specialized in guest satisfaction and VIP check-in pipelines.',
+    address: 'Apt 204, Downtown Boulevard, Dubai, UAE',
+    govtProofType: 'National ID',
+    govtProofId: '784-1995-1234567-1',
+    govtProofFileName: 'emirates_id_front_sarah.jpg',
+    govtProofFileUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
+    logs: [
+      { id: 201, date: 'May 22, 2026', checkIn: '09:00 AM', checkOut: '05:00 PM', duration: '8h 00m' },
+      { id: 202, date: 'May 21, 2026', checkIn: '08:50 AM', checkOut: '05:10 PM', duration: '8h 20m' }
+    ]
+  },
+  { 
+    id: 'STF-03', 
+    name: 'John Doe', 
+    role: 'Concierge Clerk', 
+    dept: 'Front Office', 
+    email: 'john.doe@hms.com', 
+    phone: '+971 50 345 6789', 
+    status: 'active', 
+    joined: 'Jun 2023',
+    isCheckedIn: false,
+    lastCheckIn: null,
+    details: 'Dedicated concierge assistant with multilingual capabilities providing premium guest assistance.',
+    address: 'Building A-1, Al Barsha Heights, Dubai, UAE',
+    govtProofType: 'Driver License',
+    govtProofId: 'DL-2023-887162',
+    govtProofFileName: 'uae_license_johndoe.png',
+    govtProofFileUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop',
+    logs: [
+      { id: 301, date: 'May 22, 2026', checkIn: '10:00 AM', checkOut: '06:00 PM', duration: '8h 00m' }
+    ]
+  },
+  { 
+    id: 'STF-04', 
+    name: 'Maria Gonzalez', 
+    role: 'Executive Housekeeper', 
+    dept: 'Housekeeping', 
+    email: 'maria.g@hms.com', 
+    phone: '+971 50 456 7890', 
+    status: 'active', 
+    joined: 'Mar 2022',
+    isCheckedIn: true,
+    lastCheckIn: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(), // 1.5 hours ago
+    details: 'Executive housekeeping professional with 8+ years of expertise in luxury room staging and standards compliance.',
+    address: 'Flat 10, Jumeirah Village Circle, Dubai, UAE',
+    govtProofType: 'National ID',
+    govtProofId: '784-1988-7654321-2',
+    govtProofFileName: 'emirates_id_front_maria.png',
+    govtProofFileUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop',
+    logs: [
+      { id: 401, date: 'May 22, 2026', checkIn: '08:00 AM', checkOut: '04:00 PM', duration: '8h 00m' }
+    ]
+  },
+  { 
+    id: 'STF-05', 
+    name: 'David Smith', 
+    role: 'Maintenance Lead', 
+    dept: 'Maintenance', 
+    email: 'david.s@hms.com', 
+    phone: '+971 50 567 8901', 
+    status: 'on-leave', 
+    joined: 'Aug 2020',
+    isCheckedIn: false,
+    lastCheckIn: null,
+    details: 'Certified safety and facilities maintenance manager, leading mechanical, electrical, and plumbing upkeep.',
+    address: 'Street 4B, Al Quoz Industrial Area, Dubai, UAE',
+    govtProofType: 'Driver License',
+    govtProofId: 'DL-2019-992019',
+    govtProofFileName: 'driver_license_david.jpg',
+    govtProofFileUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop',
+    logs: [
+      { id: 501, date: 'May 15, 2026', checkIn: '08:30 AM', checkOut: '05:30 PM', duration: '9h 00m' }
+    ]
+  },
+  { 
+    id: 'STF-06', 
+    name: 'Alex Wong', 
+    role: 'Head Chef', 
+    dept: 'Food & Beverage', 
+    email: 'alex.w@hms.com', 
+    phone: '+971 50 678 9012', 
+    status: 'active', 
+    joined: 'Nov 2022',
+    isCheckedIn: false,
+    lastCheckIn: null,
+    details: 'Award-winning head chef orchestrating food-and-beverage workflows and fine dining hospitality operations.',
+    address: 'Penthouse 3, Dubai Marina Heights, Dubai, UAE',
+    govtProofType: 'Passport',
+    govtProofId: 'HKG-887162-W',
+    govtProofFileName: 'passport_scan_alexwong.pdf',
+    govtProofFileUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&auto=format&fit=crop',
+    logs: [
+      { id: 601, date: 'May 22, 2026', checkIn: '11:00 AM', checkOut: '08:00 PM', duration: '9h 00m' }
+    ]
+  }
 ];
 
 const StaffPage = () => {
+  // Roster lists and search filters states
   const [staff, setStaff] = useState(initialStaff);
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
 
+  // Modals active triggers
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
+  const [viewingLogsMember, setViewingLogsMember] = useState(null);
+
+  // Active form field inputs
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+  const [dept, setDept] = useState('Front Office');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [status, setStatus] = useState('active');
+  const [details, setDetails] = useState('');
+  const [address, setAddress] = useState('');
+  const [govtProofType, setGovtProofType] = useState('Passport');
+  const [govtProofId, setGovtProofId] = useState('');
+  const [govtProofFileName, setGovtProofFileName] = useState('');
+  const [govtProofFileUrl, setGovtProofFileUrl] = useState('');
+  const [errors, setErrors] = useState({});
+
+  // Slide-in toast alerts
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'info') => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+
+  // Lock background scrolls when overlays are open
+  useEffect(() => {
+    if (isFormOpen || viewingLogsMember) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isFormOpen, viewingLogsMember]);
+
+  // Load and pre-fill form fields on edit vs add
+  useEffect(() => {
+    if (isFormOpen) {
+      setErrors({});
+      if (editingMember) {
+        setName(editingMember.name);
+        setRole(editingMember.role);
+        setDept(editingMember.dept);
+        setEmail(editingMember.email);
+        setPhone(editingMember.phone);
+        setStatus(editingMember.status);
+        setDetails(editingMember.details || '');
+        setAddress(editingMember.address || '');
+        setGovtProofType(editingMember.govtProofType || 'Passport');
+        setGovtProofId(editingMember.govtProofId || '');
+        setGovtProofFileName(editingMember.govtProofFileName || '');
+        setGovtProofFileUrl(editingMember.govtProofFileUrl || '');
+      } else {
+        setName('');
+        setRole('');
+        setDept('Front Office');
+        setEmail('');
+        setPhone('');
+        setStatus('active');
+        setDetails('');
+        setAddress('');
+        setGovtProofType('Passport');
+        setGovtProofId('');
+        setGovtProofFileName('');
+        setGovtProofFileUrl('');
+      }
+    }
+  }, [isFormOpen, editingMember]);
+
+  // Live Check-In action trigger
+  const handleCheckIn = (memberId) => {
+    setStaff((prevStaff) => 
+      prevStaff.map((member) => {
+        if (member.id === memberId) {
+          addToast(`${member.name} checked in successfully at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}!`, 'success');
+          return {
+            ...member,
+            isCheckedIn: true,
+            lastCheckIn: new Date().toISOString()
+          };
+        }
+        return member;
+      })
+    );
+  };
+
+  // Live Check-Out action trigger and log recording
+  const handleCheckOut = (memberId) => {
+    setStaff((prevStaff) => 
+      prevStaff.map((member) => {
+        if (member.id === memberId) {
+          const checkInTime = member.lastCheckIn ? new Date(member.lastCheckIn) : new Date(Date.now() - 8 * 60 * 60 * 1000); // Fallback to 8 hours
+          const checkOutTime = new Date();
+
+          // Calculate duration
+          const diffMs = checkOutTime - checkInTime;
+          const diffMins = Math.round(diffMs / 60000);
+          const hrs = Math.floor(diffMins / 60);
+          const mins = diffMins % 60;
+          const durationStr = `${hrs}h ${String(mins).padStart(2, '0')}m`;
+
+          // Format timestamps
+          const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+          const formatTime = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          const newLog = {
+            id: Date.now(),
+            date: formatDate(checkOutTime),
+            checkIn: formatTime(checkInTime),
+            checkOut: formatTime(checkOutTime),
+            duration: durationStr
+          };
+
+          addToast(`${member.name} checked out successfully. Session recorded: ${durationStr}.`, 'warning');
+          
+          return {
+            ...member,
+            isCheckedIn: false,
+            lastCheckIn: null,
+            logs: [newLog, ...member.logs]
+          };
+        }
+        return member;
+      })
+    );
+  };
+
+  // Roster input fields validation
+  const validateForm = () => {
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = 'Full Name is required.';
+    if (!role.trim()) newErrors.role = 'Role Title is required.';
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      newErrors.email = 'Email address is required.';
+    } else if (!emailRegex.test(email.trim())) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+
+    const phoneRegex = /^\+?[0-9\s-]{7,15}$/;
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required.';
+    } else if (!phoneRegex.test(phone.trim())) {
+      newErrors.phone = 'Please enter a valid contact phone number.';
+    }
+
+    if (!address.trim()) {
+      newErrors.address = 'Physical address is required.';
+    }
+
+    if (!details.trim()) {
+      newErrors.details = 'Description or bio details are required.';
+    }
+
+    if (!govtProofId.trim()) {
+      newErrors.govtProofId = 'Government ID proof number is required.';
+    }
+
+    if (!govtProofFileName) {
+      newErrors.govtProofFile = 'Government ID document or image scan is required.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Add / Edit Submission Handler
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    if (editingMember) {
+      // Edit mode: map update
+      setStaff((prevStaff) => 
+        prevStaff.map((m) => m.id === editingMember.id 
+          ? {
+              ...m,
+              name: name.trim(),
+              role: role.trim(),
+              dept,
+              email: email.trim(),
+              phone: phone.trim(),
+              status,
+              details: details.trim(),
+              address: address.trim(),
+              govtProofType,
+              govtProofId: govtProofId.trim(),
+              govtProofFileName,
+              govtProofFileUrl
+            }
+          : m
+        )
+      );
+      addToast(`Staff profile for ${name.trim()} updated successfully.`, 'success');
+    } else {
+      // Onboard mode: generate incremental ID
+      const getNextId = () => {
+        const numericIds = staff.map(m => parseInt(m.id.replace('STF-', '')));
+        const maxId = Math.max(...numericIds, 0);
+        return `STF-${String(maxId + 1).padStart(2, '0')}`;
+      };
+
+      const nextId = getNextId();
+      const formatMonthYear = () => new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+      const newMember = {
+        id: nextId,
+        name: name.trim(),
+        role: role.trim(),
+        dept,
+        email: email.trim(),
+        phone: phone.trim(),
+        status,
+        joined: formatMonthYear(),
+        isCheckedIn: false,
+        lastCheckIn: null,
+        details: details.trim(),
+        address: address.trim(),
+        govtProofType,
+        govtProofId: govtProofId.trim(),
+        govtProofFileName,
+        govtProofFileUrl,
+        logs: []
+      };
+
+      setStaff((prevStaff) => [newMember, ...prevStaff]);
+      addToast(`Staff member ${name.trim()} onboarded successfully! Assigned ID: ${nextId}.`, 'success');
+    }
+
+    setIsFormOpen(false);
+    setEditingMember(null);
+  };
+
+  // Offboard Delete Handler
+  const handleDeleteMember = (memberId, memberName) => {
+    if (window.confirm(`Are you sure you want to offboard and retire ${memberName} (${memberId}) from active HMS rosters?`)) {
+      setStaff((prevStaff) => prevStaff.filter((m) => m.id !== memberId));
+      addToast(`Staff member ${memberName} has been retired from rosters.`, 'warning');
+      if (viewingLogsMember && viewingLogsMember.id === memberId) {
+        setViewingLogsMember(null);
+      }
+    }
+  };
+
+  // Triggering the Onboard Form overlay with specific member loaded
+  const handleEditClick = (member) => {
+    setEditingMember(member);
+    setIsFormOpen(true);
+  };
+
+  // Search filter matching ID, name, role or department
   const filteredStaff = staff.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) || member.role.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = deptFilter === 'all' || member.dept === deptFilter;
     return matchesSearch && matchesDept;
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="rooms-page-container">
       
-      {/* Page Header */}
-      <div className="flex flex-col tablet:flex-row tablet:items-center tablet:justify-between gap-4">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold text-slate-800">Staff & Employee Directory</h2>
-          <p className="text-xs text-slate-400">Manage employee rosters, departments, payroll profiles, and administrative permissions.</p>
+      {/* 1. Page Header */}
+      <div className="rooms-header-wrapper">
+        <div className="rooms-header-info">
+          <h2 className="rooms-header-title">Staff & Employee Directory</h2>
+          <p className="rooms-header-subtitle">Onboard agents, assign department clearance, and check shift attendance logs.</p>
         </div>
 
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-amber-700 transition-all cursor-pointer shadow-md shadow-accent/15">
-          <Plus size={14} />
+        <button 
+          onClick={() => {
+            setEditingMember(null);
+            setIsFormOpen(true);
+          }}
+          className="rooms-btn-register"
+        >
+          <Plus size={14} className="stroke-[3]" />
           <span>Onboard New Staff</span>
         </button>
       </div>
 
-      {/* Directory Filters and Search */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        
-        {/* Search */}
-        <div className="relative w-full md:w-80">
-          <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
-            <Search size={14} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search employee name or role..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-xs bg-slate-50 text-slate-800 placeholder-slate-400 pl-9 pr-4 py-2 rounded-xl border border-slate-200 focus:bg-white focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-all"
-          />
-        </div>
+      {/* 2. Unified Stats Summary Grid */}
+      <StaffStats data={staff} />
 
-        {/* Department Filter buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-          {['all', 'Administration', 'Front Office', 'Housekeeping', 'Maintenance', 'Food & Beverage'].map((dept) => (
-            <button
-              key={dept}
-              onClick={() => setDeptFilter(dept)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider cursor-pointer border transition-all shrink-0 ${
-                deptFilter === dept 
-                  ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              {dept}
-            </button>
-          ))}
-        </div>
+      {/* 3. Directory Filters and Search */}
+      <StaffFilters 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        deptFilter={deptFilter}
+        onDeptFilterChange={setDeptFilter}
+      />
 
-      </div>
+      {/* 4. Bookings-style Roster Table */}
+      <StaffTable 
+        data={filteredStaff}
+        onCheckIn={handleCheckIn}
+        onCheckOut={handleCheckOut}
+        onViewLogs={setViewingLogsMember}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteMember}
+      />
 
-      {/* Directory Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStaff.map((member) => (
-          <div 
-            key={member.id}
-            className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between space-y-6"
+      {/* 5. Onboard / Edit Staff Drawer Modal overlay */}
+      <OnboardStaffForm 
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleSubmit}
+        editingMember={editingMember}
+        name={name}
+        setName={setName}
+        role={role}
+        setRole={setRole}
+        dept={dept}
+        setDept={setDept}
+        email={email}
+        setEmail={setEmail}
+        phone={phone}
+        setPhone={setPhone}
+        status={status}
+        setStatus={setStatus}
+        details={details}
+        setDetails={setDetails}
+        address={address}
+        setAddress={setAddress}
+        govtProofType={govtProofType}
+        setGovtProofType={setGovtProofType}
+        govtProofId={govtProofId}
+        setGovtProofId={setGovtProofId}
+        govtProofFileName={govtProofFileName}
+        setGovtProofFileName={setGovtProofFileName}
+        govtProofFileUrl={govtProofFileUrl}
+        setGovtProofFileUrl={setGovtProofFileUrl}
+        errors={errors}
+      />
+
+      {/* 6. View Activity Attendance Logs Modal dialog */}
+      <StaffLogModal 
+        viewingLogsMember={viewingLogsMember}
+        onClose={() => setViewingLogsMember(null)}
+      />
+
+      {/* 7. Visual Toast notifications overlay */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`toast-alert ${
+              toast.type === 'success' ? 'toast-alert-success' :
+              toast.type === 'warning' ? 'toast-alert-warning' :
+              toast.type === 'error' ? 'toast-alert-error' :
+              'toast-alert-info'
+            }`}
           >
-            {/* Header Details */}
-            <div className="flex justify-between items-start gap-4">
-              <div className="flex items-center gap-3.5">
-                {/* Visual Avatar */}
-                <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-extrabold text-sm shadow-inner shrink-0 uppercase">
-                  {member.name.split(' ').map(n=>n[0]).join('')}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm leading-snug">{member.name}</h3>
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold mt-0.5">
-                    <Shield size={10} className="text-slate-400" />
-                    <span>{member.role}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status indicator */}
-              <span className={`inline-flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                member.status === 'active' 
-                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                  : 'bg-red-50 text-red-600 border border-red-100'
-              }`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${member.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                <span>{member.status}</span>
-              </span>
-            </div>
-
-            {/* Shift Contact Details */}
-            <div className="space-y-2.5 bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-semibold text-slate-500">
-              <div className="flex items-center gap-2">
-                <Mail size={12} className="text-slate-400 shrink-0" />
-                <a href={`mailto:${member.email}`} className="hover:text-accent truncate">{member.email}</a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone size={12} className="text-slate-400 shrink-0" />
-                <a href={`tel:${member.phone}`} className="hover:text-accent">{member.phone}</a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar size={12} className="text-slate-400 shrink-0" />
-                <span>Joined: {member.joined}</span>
-              </div>
-            </div>
-
-            {/* Action Group */}
-            <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-semibold">
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{member.id}</span>
-              
-              <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                <button className="p-2 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-white transition-all cursor-pointer" title="Adjust Profile">
-                  <Edit size={14} />
-                </button>
-                <button className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-white transition-all cursor-pointer" title="Offboard Agent">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-
+            <span className="toast-message">{toast.message}</span>
+            <button
+              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+              className="toast-close"
+            >
+              ×
+            </button>
           </div>
         ))}
       </div>
