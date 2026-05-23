@@ -251,7 +251,7 @@ const RoomsPage = () => {
                 <div className="room-card-footer">
                   <p className="room-card-price-label">Nightly Rate</p>
                   <p className="room-card-price-value">
-                    {typeof room.price === 'number' ? `₹${room.price.toLocaleString('en-IN')}/night` : room.price}
+                    ₹{room.price.toLocaleString('en-IN')}/night
                   </p>
                 </div>
               </div>
@@ -385,7 +385,7 @@ const RoomsPage = () => {
                   <div>
                     <span className="modal-footer-price-label">Nightly Rate</span>
                     <span className="modal-footer-price-val">
-                      {typeof viewingRoom.price === 'number' ? `₹${viewingRoom.price.toLocaleString('en-IN')}` : viewingRoom.price}
+                      ₹{viewingRoom.price.toLocaleString('en-IN')}
                     </span>
                   </div>
                   <button

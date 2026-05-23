@@ -1,71 +1,166 @@
 import React from 'react';
-import { MdKingBed, MdPerson, MdCleaningServices, MdBuild } from 'react-icons/md';
+import { 
+  Sparkles, 
+  Bed, 
+  Wrench, 
+  AlertTriangle, 
+  Calendar, 
+  Users,
+  Wifi,
+  Wind,
+  Tv,
+  Coffee,
+  Compass,
+  ShieldCheck,
+  UtensilsCrossed,
+  Bath,
+  Waves,
+  ChefHat,
+  Flower2,
+  Car
+} from 'lucide-react';
 import { ROOM_STATUS } from '../constants/roomStatus';
 import '../styles/rooms.css';
 
+// Amenity to Lucide Icon mapping
+const AMENITY_ICONS = {
+  'WiFi': Wifi,
+  'AC': Wind,
+  'TV': Tv,
+  'Mini Bar': Coffee,
+  'Balcony': Compass,
+  'Safe': ShieldCheck,
+  'Room Service': UtensilsCrossed,
+  'Jacuzzi': Bath,
+  'Infinity Pool': Waves,
+  'Private Chef': ChefHat,
+  'Spa Lounge': Flower2,
+  'Valet Parking': Car
+};
+
 const RoomCard = ({ room, onClick }) => {
-  // Determine styles based on status
-  const getStatusStyles = () => {
+  
+  const getStatusBadge = () => {
     switch (room.status) {
       case ROOM_STATUS.AVAILABLE:
-        return 'room-card-available';
+        return (
+          <span className="status-badge status-badge-available">
+            <Sparkles size={9} />
+            <span>Available</span>
+          </span>
+        );
       case ROOM_STATUS.OCCUPIED:
-        return 'room-card-occupied';
+        return (
+          <span className="status-badge status-badge-occupied">
+            <Bed size={9} />
+            <span>Occupied</span>
+          </span>
+        );
       case ROOM_STATUS.RESERVED:
-        return 'room-card-reserved';
+        return (
+          <span className="status-badge status-badge-reserved">
+            <Calendar size={9} />
+            <span>Reserved</span>
+          </span>
+        );
       case ROOM_STATUS.CLEANING:
-        return 'room-card-cleaning';
+        return (
+          <span className="status-badge status-badge-dirty">
+            <AlertTriangle size={9} />
+            <span>Needs Cleaning</span>
+          </span>
+        );
       case ROOM_STATUS.MAINTENANCE:
-        return 'room-card-maintenance';
+        return (
+          <span className="status-badge status-badge-maintenance">
+            <Wrench size={9} />
+            <span>Maintenance</span>
+          </span>
+        );
       default:
-        return 'room-card-default';
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (room.status) {
-      case ROOM_STATUS.OCCUPIED: return <MdPerson size={16} />;
-      case ROOM_STATUS.CLEANING: return <MdCleaningServices size={16} />;
-      case ROOM_STATUS.MAINTENANCE: return <MdBuild size={16} />;
-      default: return <MdKingBed size={16} />;
+        return null;
     }
   };
 
   return (
     <div
       onClick={() => onClick && onClick(room)}
-      className={`room-card ${getStatusStyles()}`}
+      className="room-card group"
     >
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="text-xl font-bold tracking-tight opacity-90">{room.roomNumber}</h3>
-          <p className="text-xs font-semibold opacity-70 mt-0.5 uppercase tracking-wider">{room.type}</p>
+      {/* Cover Header dynamic image area */}
+      <div 
+        className="room-card-thumbnail"
+        style={{ 
+          backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.25), rgba(15, 23, 42, 0.85)), url(${room.images && room.images[0]})` 
+        }}
+      >
+        {/* Visual Floor & Status badges */}
+        <div className="room-card-badge-row">
+          <span className="room-card-floor">
+            {room.floor.replace('Floor', '')}F
+          </span>
+          {getStatusBadge()}
         </div>
-        <div className="room-icon-wrapper">
-          {getStatusIcon()}
+
+        <div className="room-card-title-row">
+          <h3 className="room-card-title">Room {room.roomNumber}</h3>
         </div>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex justify-between items-center text-sm font-semibold opacity-90">
-          <span>{room.status}</span>
-          <span>₹{room.price}</span>
+      {/* Card Specs Body */}
+      <div className="room-card-body">
+        <div className="room-card-details-wrapper">
+          <p className="room-card-type">{room.type}</p>
+          
+          {/* Capacity & Bed specs */}
+          <div className="room-card-specs">
+            <span className="room-card-spec-badge">
+              <Bed size={10} className="room-card-spec-icon" />
+              <span>{room.bedType} Bed</span>
+            </span>
+            <span className="room-card-spec-badge">
+              <Users size={10} className="room-card-spec-icon" />
+              <span>Max {room.capacity} Guests</span>
+            </span>
+          </div>
+
+          {/* Amenities Quick list */}
+          {room.amenities && room.amenities.length > 0 && (
+            <div className="room-card-amenities">
+              {room.amenities.slice(0, 3).map((amenity, idx) => {
+                const Icon = AMENITY_ICONS[amenity];
+                return (
+                  <span 
+                    key={idx} 
+                    className="room-card-amenity-btn" 
+                    title={amenity}
+                  >
+                    {Icon ? <Icon size={11} /> : <span className="text-[8px] font-bold px-1">{amenity[0]}</span>}
+                  </span>
+                );
+              })}
+              {room.amenities.length > 3 && (
+                <span className="room-card-amenity-more">
+                  +{room.amenities.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+
+          <p className="room-card-cleaned">Last Cleaned: {room.lastCleaned}</p>
         </div>
 
-        {/* Conditional Info based on status */}
-        {room.status === ROOM_STATUS.OCCUPIED && (
-          <p className="text-xs opacity-75 truncate pt-1">Guest: {room.guestName}</p>
-        )}
-        {room.status === ROOM_STATUS.CLEANING && (
-          <p className="text-xs opacity-75 truncate pt-1">Staff: {room.cleaningStaff}</p>
-        )}
+        {/* Nightly rate footer */}
+        <div className="room-card-footer">
+          <p className="room-card-price-label">Nightly Rate</p>
+          <p className="room-card-price-value">
+            ₹{room.price.toLocaleString('en-IN')}/night
+          </p>
+        </div>
       </div>
 
-      {/* Decorative Floor Tag */}
-      <span className="room-floor-tag">
-        {room.floor.replace('Floor', '')}F
-      </span>
     </div>
   );
 };
+
 export default RoomCard;

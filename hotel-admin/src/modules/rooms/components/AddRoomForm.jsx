@@ -127,10 +127,7 @@ const AddRoomForm = ({ isOpen, onClose, onAdd, onEdit, editingRoom = null, exist
         setCapacity(editingRoom.capacity.toString());
         
         // Parse numerical price
-        const parsedPrice = editingRoom.numericPrice 
-          ? editingRoom.numericPrice.toString() 
-          : editingRoom.price.toString().replace(/[^0-9]/g, '');
-        setPrice(parsedPrice);
+        setPrice(editingRoom.price.toString());
 
         // Handle custom Bed Type if not in default list
         if (editingRoom.bedType && !bedTypes.includes(editingRoom.bedType)) {
@@ -354,8 +351,7 @@ const AddRoomForm = ({ isOpen, onClose, onAdd, onEdit, editingRoom = null, exist
       type: roomType,
       floor: floor,
       status: status,
-      price: `₹${parseFloat(price).toLocaleString('en-IN')}/night`,
-      numericPrice: parseFloat(price),
+      price: parseFloat(price),
       capacity: parseInt(capacity),
       bedType: bedType,
       amenities: selectedAmenities,
