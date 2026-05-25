@@ -5,6 +5,7 @@ import {
   Bed,
   Users,
   CalendarRange,
+  Clock,
   BarChart3,
   LogOut,
   ShieldAlert,
@@ -14,9 +15,10 @@ import {
 
 const navLinks = [
   { label: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-  { label: 'Bookings', path: '/bookings', icon: <CalendarRange size={20} /> },
   { label: 'Rooms Management', path: '/rooms', icon: <Bed size={20} /> },
+  { label: 'Shift Management', path: '/shifts', icon: <Clock size={20} /> },
   { label: 'Staff Management', path: '/staff', icon: <Users size={20} /> },
+  { label: 'Bookings', path: '/bookings', icon: <CalendarRange size={20} /> },
   { label: 'Reports & Stats', path: '/reports', icon: <BarChart3 size={20} /> },
 ];
 

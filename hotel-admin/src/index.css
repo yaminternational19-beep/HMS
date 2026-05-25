@@ -6,6 +6,8 @@
 
 @import "./styles/responsive.css";
 @import "./styles/global-table.css";
+@import "./modules/staff/styles/staff.css";
+@import "./modules/shifts/styles/shift.css";
 
 :root {
   --color-primary: #0f172a;      /* Deep slate/navy for text and sidebar background */

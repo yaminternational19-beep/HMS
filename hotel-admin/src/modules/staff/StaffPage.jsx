@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import StaffFilters from './components/StaffFilters';
 import StaffStats from './components/StaffStats';
 import StaffTable from './components/StaffTable';
+import ShiftTimings from './components/ShiftTimings';
 import OnboardStaffForm from './components/OnboardStaffForm';
 import StaffLogModal from './components/StaffLogModal';
 import './styles/staff.css';
@@ -26,6 +27,7 @@ const initialStaff = [
     govtProofId: 'DXB-983726-P',
     govtProofFileName: 'passport_scan_praveen.pdf',
     govtProofFileUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop',
+    shiftId: 'SHF-04',
     logs: [
       { id: 101, date: 'May 22, 2026', checkIn: '08:30 AM', checkOut: '06:00 PM', duration: '9h 30m' },
       { id: 102, date: 'May 21, 2026', checkIn: '08:45 AM', checkOut: '05:45 PM', duration: '9h 00m' }
@@ -48,6 +50,7 @@ const initialStaff = [
     govtProofId: '784-1995-1234567-1',
     govtProofFileName: 'emirates_id_front_sarah.jpg',
     govtProofFileUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
+    shiftId: 'SHF-01',
     logs: [
       { id: 201, date: 'May 22, 2026', checkIn: '09:00 AM', checkOut: '05:00 PM', duration: '8h 00m' },
       { id: 202, date: 'May 21, 2026', checkIn: '08:50 AM', checkOut: '05:10 PM', duration: '8h 20m' }
@@ -64,12 +67,13 @@ const initialStaff = [
     joined: 'Jun 2023',
     isCheckedIn: false,
     lastCheckIn: null,
-    details: 'Dedicated concierge assistant with multilingual capabilities providing premium guest assistance.',
+    details: 'Dedicated concierge assistant with multilingual capabilities providing guest assistance.',
     address: 'Building A-1, Al Barsha Heights, Dubai, UAE',
     govtProofType: 'Driver License',
     govtProofId: 'DL-2023-887162',
     govtProofFileName: 'uae_license_johndoe.png',
     govtProofFileUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop',
+    shiftId: 'SHF-02',
     logs: [
       { id: 301, date: 'May 22, 2026', checkIn: '10:00 AM', checkOut: '06:00 PM', duration: '8h 00m' }
     ]
@@ -85,12 +89,13 @@ const initialStaff = [
     joined: 'Mar 2022',
     isCheckedIn: true,
     lastCheckIn: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(), // 1.5 hours ago
-    details: 'Executive housekeeping professional with 8+ years of expertise in luxury room staging and standards compliance.',
+    details: 'Executive housekeeping professional leading room staging and standards compliance.',
     address: 'Flat 10, Jumeirah Village Circle, Dubai, UAE',
     govtProofType: 'National ID',
     govtProofId: '784-1988-7654321-2',
     govtProofFileName: 'emirates_id_front_maria.png',
     govtProofFileUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop',
+    shiftId: 'SHF-01',
     logs: [
       { id: 401, date: 'May 22, 2026', checkIn: '08:00 AM', checkOut: '04:00 PM', duration: '8h 00m' }
     ]
@@ -106,12 +111,13 @@ const initialStaff = [
     joined: 'Aug 2020',
     isCheckedIn: false,
     lastCheckIn: null,
-    details: 'Certified safety and facilities maintenance manager, leading mechanical, electrical, and plumbing upkeep.',
+    details: 'Certified facilities maintenance manager, leading plumbing, electrical and safety systems.',
     address: 'Street 4B, Al Quoz Industrial Area, Dubai, UAE',
     govtProofType: 'Driver License',
     govtProofId: 'DL-2019-992019',
     govtProofFileName: 'driver_license_david.jpg',
     govtProofFileUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop',
+    shiftId: 'SHF-03',
     logs: [
       { id: 501, date: 'May 15, 2026', checkIn: '08:30 AM', checkOut: '05:30 PM', duration: '9h 00m' }
     ]
@@ -127,12 +133,13 @@ const initialStaff = [
     joined: 'Nov 2022',
     isCheckedIn: false,
     lastCheckIn: null,
-    details: 'Award-winning head chef orchestrating food-and-beverage workflows and fine dining hospitality operations.',
+    details: 'Head chef orchestrating kitchen staff and fine dining hospitality operations.',
     address: 'Penthouse 3, Dubai Marina Heights, Dubai, UAE',
     govtProofType: 'Passport',
     govtProofId: 'HKG-887162-W',
     govtProofFileName: 'passport_scan_alexwong.pdf',
     govtProofFileUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&auto=format&fit=crop',
+    shiftId: 'SHF-02',
     logs: [
       { id: 601, date: 'May 22, 2026', checkIn: '11:00 AM', checkOut: '08:00 PM', duration: '9h 00m' }
     ]
@@ -144,6 +151,9 @@ const StaffPage = () => {
   const [staff, setStaff] = useState(initialStaff);
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dutyFilter, setDutyFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('id-desc');
 
   // Modals active triggers
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -376,6 +386,7 @@ const StaffPage = () => {
         govtProofId: govtProofId.trim(),
         govtProofFileName,
         govtProofFileUrl,
+        shiftId: 'SHF-01',
         logs: []
       };
 
@@ -398,21 +409,65 @@ const StaffPage = () => {
     }
   };
 
+
+
   // Triggering the Onboard Form overlay with specific member loaded
   const handleEditClick = (member) => {
     setEditingMember(member);
     setIsFormOpen(true);
   };
 
-  // Search filter matching ID, name, role or department
-  const filteredStaff = staff.filter(member => {
-    const matchesSearch = 
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = deptFilter === 'all' || member.dept === deptFilter;
-    return matchesSearch && matchesDept;
-  });
+  // Helper for parsing joined date safely for sorting
+  const parseJoined = (dateStr) => {
+    try {
+      return new Date(dateStr).getTime() || 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
+  // Search filter matching ID, name, role or department, plus status, duty and sorting
+  const filteredStaff = staff
+    .filter(member => {
+      const matchesSearch = 
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDept = deptFilter === 'all' || member.dept === deptFilter;
+      const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
+      const matchesDuty = dutyFilter === 'all' || 
+        (dutyFilter === 'on-duty' ? member.isCheckedIn : !member.isCheckedIn);
+      return matchesSearch && matchesDept && matchesStatus && matchesDuty;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'id-asc':
+          return a.id.localeCompare(b.id, undefined, { numeric: true });
+        case 'id-desc':
+          return b.id.localeCompare(a.id, undefined, { numeric: true });
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'joined-desc':
+          return parseJoined(b.joined) - parseJoined(a.joined);
+        case 'joined-asc':
+          return parseJoined(a.joined) - parseJoined(b.joined);
+        default:
+          return 0;
+      }
+    });
+
+  const isFilterActive = searchTerm !== '' || deptFilter !== 'all' || statusFilter !== 'all' || dutyFilter !== 'all';
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setDeptFilter('all');
+    setStatusFilter('all');
+    setDutyFilter('all');
+    setSortBy('id-desc');
+    addToast('Search filters reset to default.', 'info');
+  };
 
   return (
     <div className="rooms-page-container">
@@ -423,7 +478,7 @@ const StaffPage = () => {
           <h2 className="rooms-header-title">Staff & Employee Directory</h2>
           <p className="rooms-header-subtitle">Onboard agents, assign department clearance, and check shift attendance logs.</p>
         </div>
-
+ 
         <button 
           onClick={() => {
             setEditingMember(null);
@@ -435,27 +490,37 @@ const StaffPage = () => {
           <span>Onboard New Staff</span>
         </button>
       </div>
-
+ 
       {/* 2. Unified Stats Summary Grid */}
       <StaffStats data={staff} />
+ 
+      {/* 3. Unified Workspace (Filters + Table) */}
+      <div className="booking-workspace-container">
+        <StaffFilters 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          deptFilter={deptFilter}
+          onDeptFilterChange={setDeptFilter}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          dutyFilter={dutyFilter}
+          onDutyFilterChange={setDutyFilter}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          onClearFilters={handleClearFilters}
+          isFilterActive={isFilterActive}
+        />
 
-      {/* 3. Directory Filters and Search */}
-      <StaffFilters 
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        deptFilter={deptFilter}
-        onDeptFilterChange={setDeptFilter}
-      />
-
-      {/* 4. Bookings-style Roster Table */}
-      <StaffTable 
-        data={filteredStaff}
-        onCheckIn={handleCheckIn}
-        onCheckOut={handleCheckOut}
-        onViewLogs={setViewingLogsMember}
-        onEdit={handleEditClick}
-        onDelete={handleDeleteMember}
-      />
+        <StaffTable 
+          data={filteredStaff}
+          onCheckIn={handleCheckIn}
+          onCheckOut={handleCheckOut}
+          onViewLogs={setViewingLogsMember}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteMember}
+          className="!border-none !shadow-none !rounded-none"
+        />
+      </div>
 
       {/* 5. Onboard / Edit Staff Drawer Modal overlay */}
       <OnboardStaffForm 
