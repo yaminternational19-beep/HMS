@@ -18,5 +18,8 @@ class SuperAdmin(models.Model):
     def check_password(self, raw_password):
         return check_password(raw_password, self.password)
 
+    class Meta:
+        db_table = 'SuperAdmin'  # Explicitly sets the MySQL table name matching the class name
+
     def __str__(self):
         return f"{self.name} ({self.email})"

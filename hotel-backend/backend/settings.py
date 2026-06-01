@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'apps.testing',
     'apps.authentication',
+    'apps.superadmin.rooms',
+    'apps.superadmin.shifts',
     'core',
 ]
 
@@ -153,4 +155,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
 }
+
+# Media files configuration (File uploads management)
+MEDIA_URL = '/uploads/'
+MEDIA_ROOT = BASE_DIR / 'uploads'
+
 

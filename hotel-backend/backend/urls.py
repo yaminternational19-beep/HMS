@@ -15,8 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('api/', include('apps.testing.urls')),
     path('api/auth/', include('apps.authentication.urls')),
+    path('api/rooms/', include('apps.superadmin.rooms.urls')),
 ]
+
+# Serve uploaded media files during development (Vite/React accessible)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

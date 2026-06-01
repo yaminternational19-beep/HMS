@@ -356,9 +356,7 @@ const AddRoomForm = ({ isOpen, onClose, onAdd, onEdit, editingRoom = null, exist
       bedType: bedType,
       amenities: selectedAmenities,
       description: description.trim() || 'No description provided.',
-      images: uploadedImages.length > 0 
-        ? uploadedImages.map(img => img.url) 
-        : ['https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500&auto=format&fit=crop&q=60'],
+      images: uploadedImages,
       lastCleaned: editingRoom ? editingRoom.lastCleaned : 'Just registered'
     };
 

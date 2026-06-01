@@ -51,3 +51,28 @@ def jwt_required(view_func):
         return view_func(request, *args, **kwargs)
     return wrapped_view
 
+def superadmin_required(view_func):
+    """
+    Decorator that ensures a valid JWT is present AND the authenticated user is strictly a Super Admin.
+    """
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        user = getattr(request, 'staff', None)
+        if not user:
+            return error_response(
+                message="Unauthorized. Valid JWT token is required.",
+                errors={"auth": "Missing or invalid token"},
+                status_code=StatusCodes.UNAUTHORIZED
+            )
+            
+        if getattr(user, 'role', '') != 'super_admin':
+            return error_response(
+                message="Forbidden. Only Super Admins are authorized to perform this operation.",
+                errors={"auth": "Insufficient privileges"},
+                status_code=StatusCodes.FORBIDDEN
+            )
+            
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
+

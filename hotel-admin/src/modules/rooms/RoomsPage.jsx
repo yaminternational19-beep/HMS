@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getRooms, createRoom, updateRoom, deleteRoom } from '../../api/rooms';
 import { 
   Plus, 
   Bed, 
@@ -23,7 +24,6 @@ import {
   Flower2,
   Car
 } from 'lucide-react';
-import { MOCK_ROOMS } from './mockdata/rooms.mock';
 import AddRoomForm from './components/AddRoomForm';
 import RoomFilters from './components/RoomFilters';
 import './styles/rooms.css';
@@ -45,8 +45,8 @@ const AMENITY_ICONS = {
 };
 
 const RoomsPage = () => {
-  // State loaded from unified mock database
-  const [rooms, setRooms] = useState(MOCK_ROOMS);
+  // State loaded from backend API
+  const [rooms, setRooms] = useState([]);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -54,6 +54,7 @@ const RoomsPage = () => {
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [viewingRoom, setViewingRoom] = useState(null);
   const [editingRoom, setEditingRoom] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Toast notification state
   const [toasts, setToasts] = useState([]);
@@ -66,6 +67,40 @@ const RoomsPage = () => {
     }, 4500);
   };
 
+  // Fetch Rooms from Backend exactly once on component mount
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await getRooms();
+        if (res && res.success) {
+          setRooms(res.data);
+        } else {
+          addToast(res.message || 'Failed to load rooms inventory.', 'error');
+        }
+      } catch (err) {
+        const errMsg = err.response?.data?.message || 'Error loading rooms inventory.';
+        addToast(errMsg, 'error');
+      }
+    };
+    fetchRooms();
+  }, []);
+
+  // Slideshow effect for the detailed room modal
+  useEffect(() => {
+    if (!viewingRoom || !viewingRoom.images || viewingRoom.images.length <= 1) {
+      setActiveImageIndex(0);
+      return;
+    }
+
+    setActiveImageIndex(0); // Reset index on open
+
+    const interval = setInterval(() => {
+      setActiveImageIndex((prevIndex) => (prevIndex + 1) % viewingRoom.images.length);
+    }, 2000); // Cycle every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [viewingRoom]);
+
   // Filter and Search Logic
   const filteredRooms = rooms.filter(room => {
     const matchesSearch = 
@@ -77,10 +112,20 @@ const RoomsPage = () => {
   });
 
   // Add Room callback
-  const handleAddRoom = (newRoom) => {
-    setRooms((prev) => [newRoom, ...prev]);
-    setIsAddFormOpen(false);
-    addToast(`Room ${newRoom.roomNumber} (${newRoom.type}) registered successfully!`, 'success');
+  const handleAddRoom = async (newRoom) => {
+    try {
+      const res = await createRoom(newRoom);
+      if (res && res.success) {
+        setRooms((prev) => [res.data, ...prev]);
+        setIsAddFormOpen(false);
+        addToast(`Room ${res.data.roomNumber} (${res.data.type}) registered successfully!`, 'success');
+      } else {
+        addToast(res.message || 'Failed to register room.', 'error');
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Error registering room.';
+      addToast(errMsg, 'error');
+    }
   };
 
   // Edit Room callback
@@ -90,21 +135,41 @@ const RoomsPage = () => {
     setIsAddFormOpen(true);
   };
 
-  const handleEditRoom = (updatedRoom) => {
-    setRooms((prev) => prev.map((r) => r.id === updatedRoom.id ? updatedRoom : r));
-    setIsAddFormOpen(false);
-    setEditingRoom(null);
-    addToast(`Room ${updatedRoom.roomNumber} updated successfully!`, 'success');
+  const handleEditRoom = async (updatedRoom) => {
+    try {
+      const res = await updateRoom(updatedRoom.roomNumber, updatedRoom);
+      if (res && res.success) {
+        setRooms((prev) => prev.map((r) => r.roomNumber === updatedRoom.roomNumber ? res.data : r));
+        setIsAddFormOpen(false);
+        setEditingRoom(null);
+        addToast(`Room ${res.data.roomNumber} updated successfully!`, 'success');
+      } else {
+        addToast(res.message || 'Failed to update room.', 'error');
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Error updating room.';
+      addToast(errMsg, 'error');
+    }
   };
 
   // Retire / Delete Asset callback
-  const handleDeleteRoom = (roomId, e) => {
+  const handleDeleteRoom = async (roomId, e) => {
     e.stopPropagation(); // Avoid triggering details modal
     if (window.confirm(`Are you sure you want to retire Room ${roomId} from the active lodging inventory?`)) {
-      setRooms((prev) => prev.filter((r) => r.id !== roomId));
-      addToast(`Room ${roomId} retired from active asset inventory.`, 'warning');
-      if (viewingRoom && viewingRoom.id === roomId) {
-        setViewingRoom(null);
+      try {
+        const res = await deleteRoom(roomId);
+        if (res && res.success) {
+          setRooms((prev) => prev.filter((r) => r.roomNumber !== roomId));
+          addToast(`Room ${roomId} retired from active asset inventory.`, 'warning');
+          if (viewingRoom && viewingRoom.roomNumber === roomId) {
+            setViewingRoom(null);
+          }
+        } else {
+          addToast(res.message || 'Failed to delete room.', 'error');
+        }
+      } catch (err) {
+        const errMsg = err.response?.data?.message || 'Error retiring room.';
+        addToast(errMsg, 'error');
       }
     }
   };
@@ -285,13 +350,55 @@ const RoomsPage = () => {
         <div className="booking-modal-overlay animate-fade-in" onClick={() => setViewingRoom(null)}>
           <div className="booking-modal-container animate-slide-up" onClick={(e) => e.stopPropagation()}>
             
-            {/* Cover header area */}
+            {/* Cover header area with active image slideshow */}
             <div 
-              className="room-card-thumbnail room-card-thumbnail-large"
+              className="room-card-thumbnail room-card-thumbnail-large transition-all duration-500"
               style={{ 
-                backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.9)), url(${viewingRoom.images && viewingRoom.images[0]})` 
+                backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.9)), url(${viewingRoom.images && viewingRoom.images[activeImageIndex]})` 
               }}
             >
+              {/* Carousel Navigation Arrows */}
+              {viewingRoom.images && viewingRoom.images.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev === 0 ? viewingRoom.images.length - 1 : prev - 1));
+                    }}
+                    className="carousel-btn carousel-btn-left"
+                    title="Previous Image"
+                  >
+                    ‹
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev + 1) % viewingRoom.images.length);
+                    }}
+                    className="carousel-btn carousel-btn-right"
+                    title="Next Image"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              {/* Dot Indicators */}
+              {viewingRoom.images && viewingRoom.images.length > 1 && (
+                <div className="carousel-dots">
+                  {viewingRoom.images.map((_, idx) => (
+                    <span 
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveImageIndex(idx);
+                      }}
+                      className={`carousel-dot ${idx === activeImageIndex ? 'carousel-dot-active' : ''}`}
+                    />
+                  ))}
+                </div>
+              )}
+
               <div className="room-card-badge-row">
                 <span className="room-card-floor">
                   {viewingRoom.floor}

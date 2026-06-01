@@ -64,3 +64,10 @@ celerybeat-schedule
 
 # Gunicorn
 gunicorn.pid
+
+
+
+# uploads/  # If you want to ignore uploaded media files, but it's better to keep this outside the project directory.
+
+uploads/
+
