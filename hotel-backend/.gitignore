@@ -1,0 +1,66 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment Variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Migrations (optional)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Build files
+dist/
+build/
+*.egg-info/
+
+# Cache
+.cache/
+
+# Type checker
+.mypy_cache/
+
+# Ruff/Lint
+.ruff_cache/
+
+# Node (if frontend inside same project)
+node_modules/
+
+# Celery
+celerybeat-schedule
+
+# Gunicorn
+gunicorn.pid
