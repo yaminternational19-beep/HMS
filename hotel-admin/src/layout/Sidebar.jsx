@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { getCookie, deleteCookie } from '../api/cookieHelper';
 import {
   LayoutDashboard,
   Bed,
@@ -24,11 +25,16 @@ const navLinks = [
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Standard mock logout
-    console.log('Logging out from Admin...');
+    deleteCookie('adminToken');
+    deleteCookie('adminUserEmail');
+    navigate('/login');
   };
+
+  const userEmail = getCookie('adminUserEmail') || 'admin@blackcube.ae';
+  const userInitials = userEmail.split('@')[0].substring(0, 2).toUpperCase();
 
   return (
     <aside
@@ -85,14 +91,14 @@ const Sidebar = () => {
       {/* User Profile & Logout section at the bottom */}
       <div className="mt-auto border-t border-slate-800 p-4 flex flex-col gap-3 shrink-0 bg-slate-950/40">
         <div className="flex items-center gap-3">
-          {/* Avatar with PR initials */}
+          {/* Avatar with dynamic initials */}
           <div className="h-10 w-10 rounded-xl bg-accent/20 text-accent flex items-center justify-center font-bold text-sm shrink-0 border border-accent/30 shadow-inner">
-            AD
+            {userInitials}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate leading-tight text-slate-200">Admin Portal</p>
-              <p className="text-[10px] text-slate-500 truncate mt-0.5">Systems Administrator</p>
+              <p className="text-[10px] text-slate-500 truncate mt-0.5">{userEmail}</p>
             </div>
           )}
         </div>

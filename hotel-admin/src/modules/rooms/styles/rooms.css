@@ -252,7 +252,7 @@
 
 /* Toast container rules */
 .toast-container {
-  @apply fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none;
+  @apply fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none;
 }
 
 .toast-alert {
