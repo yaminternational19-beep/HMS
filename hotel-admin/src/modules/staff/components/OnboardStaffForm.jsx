@@ -1,26 +1,42 @@
-import React from 'react';
-import { Plus, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, X, Camera, Eye, EyeOff } from 'lucide-react';
 import ActionButton from '../../../components/ActionButton';
+import CountryCodeSelect from '../../../components/CountryCodeSelect';
+
+const DEFAULT_ROLES = [
+  'Corporate Director',
+  'Front Desk Manager',
+  'Concierge Clerk',
+  'Executive Housekeeper',
+  'Maintenance Lead',
+  'Head Chef',
+  'Security Officer'
+];
 
 const OnboardStaffForm = ({
   isOpen,
   onClose,
   onSubmit,
   editingMember,
+  shifts = [],
   name,
   setName,
-  role,
-  setRole,
   dept,
   setDept,
   email,
   setEmail,
-  phone,
-  setPhone,
+  phoneCountry,
+  setPhoneCountry,
+  phoneNo,
+  setPhoneNo,
+  emergencyCountry,
+  setEmergencyCountry,
+  emergencyNo,
+  setEmergencyNo,
+  shiftId,
+  setShiftId,
   status,
   setStatus,
-  details,
-  setDetails,
   address,
   setAddress,
   govtProofType,
@@ -31,13 +47,53 @@ const OnboardStaffForm = ({
   setGovtProofFileName,
   govtProofFileUrl,
   setGovtProofFileUrl,
-  errors
+  profileFileName,
+  setProfileFileName,
+  profileFileUrl,
+  setProfileFileUrl,
+  errors,
+  password,
+  setPassword
 }) => {
+  const [roles, setRoles] = useState(DEFAULT_ROLES);
+  const [isCreatingRole, setIsCreatingRole] = useState(false);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Handle custom Role if not in default list when editing
+  useEffect(() => {
+    if (isOpen) {
+      setIsCreatingRole(false);
+      setNewRoleName('');
+      if (editingMember && editingMember.dept) {
+        if (!roles.some(r => r.toLowerCase() === editingMember.dept.toLowerCase())) {
+          setRoles(prev => [...prev, editingMember.dept]);
+        }
+      }
+    }
+  }, [isOpen, editingMember]);
+
+  const handleAddNewRole = (e) => {
+    e.preventDefault();
+    const cleanName = newRoleName.trim();
+    if (!cleanName) return;
+
+    if (roles.some((r) => r.toLowerCase() === cleanName.toLowerCase())) {
+      alert('This role already exists.');
+      return;
+    }
+
+    setRoles((prev) => [...prev, cleanName]);
+    setDept(cleanName);
+    setNewRoleName('');
+    setIsCreatingRole(false);
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="rooms-modal-overlay" onClick={onClose}>
-      <div className="rooms-modal-container animate-slide-up" onClick={(e) => e.stopPropagation()}>
+      <div className="rooms-modal-container animate-slide-up !max-w-[600px]" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="rooms-modal-header">
           <div className="rooms-modal-header-left">
@@ -49,7 +105,7 @@ const OnboardStaffForm = ({
                 {editingMember ? `Adjust Clearance - ${editingMember.name}` : 'Onboard New Staff Agent'}
               </h3>
               <p className="rooms-modal-header-subtitle">
-                Configure names, departments, contact, and administrative details.
+                Configure names, shift schedules, profiles, and administrative credentials.
               </p>
             </div>
           </div>
@@ -64,8 +120,50 @@ const OnboardStaffForm = ({
 
         {/* Form Body */}
         <form onSubmit={onSubmit} className="rooms-modal-form">
-          <div className="rooms-modal-body">
+          <div className="rooms-modal-body max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
             
+            {/* Profile Picture Uploader */}
+            <div className="flex flex-col items-center justify-center pb-4 border-b border-slate-100 mb-4">
+              <div 
+                className="relative h-20 w-20 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 cursor-pointer overflow-hidden group hover:border-slate-350 hover:bg-slate-100/50 transition-all shadow-inner"
+                onClick={() => document.getElementById('profileFileInput').click()}
+              >
+                {profileFileUrl ? (
+                  <img 
+                    src={profileFileUrl} 
+                    alt="Profile Preview" 
+                    className="h-full w-full object-cover" 
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-400 text-[10px] font-bold">
+                    <Camera size={18} className="text-slate-400 mb-1" />
+                    <span>Upload Picture</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[9px] font-bold">
+                  Change
+                </div>
+              </div>
+              <input
+                type="file"
+                id="profileFileInput"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setProfileFileName(file.name);
+                    setProfileFileUrl(URL.createObjectURL(file));
+                  }
+                }}
+              />
+              {profileFileName && (
+                <p className="text-[10px] text-slate-400 font-semibold mt-1.5 truncate max-w-[150px]">
+                  {profileFileName}
+                </p>
+              )}
+            </div>
+
             {/* Full Name */}
             <div>
               <label className="form-label" htmlFor="staffName">Full Name *</label>
@@ -73,7 +171,7 @@ const OnboardStaffForm = ({
                 type="text"
                 id="staffName"
                 value={name}
-                placeholder="e.g. Liam Neeson"
+                placeholder="e.g. Sarah Connor"
                 onChange={(e) => setName(e.target.value)}
                 className={`form-input ${errors.name ? 'form-input-error' : ''}`}
               />
@@ -82,68 +180,191 @@ const OnboardStaffForm = ({
               )}
             </div>
 
-            {/* Role Title */}
+            {/* Roster Title Role Selector with Add Custom workflow */}
             <div>
-              <label className="form-label" htmlFor="staffRole">Roster Title Role *</label>
-              <input
-                type="text"
-                id="staffRole"
-                value={role}
-                placeholder="e.g. Concierge Supervisor"
-                onChange={(e) => setRole(e.target.value)}
-                className={`form-input ${errors.role ? 'form-input-error' : ''}`}
-              />
-              {errors.role && (
-                <p className="form-error-msg">{errors.role}</p>
+              <div className="form-label-row">
+                <label className="form-label form-label-nomargin" htmlFor="staffDept">Roster Title Role *</label>
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingRole(!isCreatingRole)}
+                  className="form-action-link"
+                >
+                  {isCreatingRole ? 'Cancel Custom' : '+ Add Custom Role'}
+                </button>
+              </div>
+
+              {!isCreatingRole ? (
+                <select
+                  id="staffDept"
+                  value={dept}
+                  onChange={(e) => setDept(e.target.value)}
+                  className={`form-select ${errors.dept ? 'form-input-error' : ''}`}
+                >
+                  <option value="">-- Choose Role --</option>
+                  {roles.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="form-sub-builder">
+                  <div className="w-full">
+                    <input
+                      type="text"
+                      value={newRoleName}
+                      placeholder="e.g. Guest Relations Supervisor"
+                      onChange={(e) => setNewRoleName(e.target.value)}
+                      className="form-input form-input-small"
+                    />
+                  </div>
+                  <div className="form-button-row mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreatingRole(false);
+                        setNewRoleName('');
+                      }}
+                      className="form-sub-btn-secondary"
+                    >
+                      Dismiss
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddNewRole}
+                      className="form-sub-btn-primary"
+                    >
+                      Save Role
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
-            {/* Dept Selection */}
+            {/* Conditional Operational HMS Password (for Maintenance & Front Office roles only) */}
+            {dept && (dept.toLowerCase().includes('front') || dept.toLowerCase().includes('maintain')) && (
+              <div className="space-y-1 mb-4 animate-fade-in relative">
+                <label className="form-label" htmlFor="staffPassword">HMS Operation Password *</label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="staffPassword"
+                    value={password || ''}
+                    placeholder="Enter operation password"
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`form-input pr-10 ${errors.password ? 'form-input-error' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none bg-transparent border-0 cursor-pointer flex items-center"
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="form-error-msg">{errors.password}</p>
+                )}
+              </div>
+            )}
+
+            {/* Email (Optional) */}
             <div>
-              <label className="form-label" htmlFor="staffDept">Clearance Department</label>
-              <select
-                id="staffDept"
-                value={dept}
-                onChange={(e) => setDept(e.target.value)}
-                className="form-select"
-              >
-                {['Administration', 'Front Office', 'Housekeeping', 'Maintenance', 'Food & Beverage'].map((deptName) => (
-                  <option key={deptName} value={deptName}>{deptName}</option>
-                ))}
-              </select>
+              <label className="form-label" htmlFor="staffEmail">Email Address (Optional)</label>
+              <input
+                type="text"
+                id="staffEmail"
+                value={email}
+                placeholder="username@hms.com"
+                onChange={(e) => setEmail(e.target.value)}
+                className={`form-input ${errors.email ? 'form-input-error' : ''}`}
+              />
+              {errors.email && (
+                <p className="form-error-msg">{errors.email}</p>
+              )}
             </div>
 
             <div className="form-grid-2col">
-              {/* Email */}
-              <div>
-                <label className="form-label" htmlFor="staffEmail">Email Address *</label>
-                <input
-                  type="text"
-                  id="staffEmail"
-                  value={email}
-                  placeholder="username@hms.com"
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`form-input ${errors.email ? 'form-input-error' : ''}`}
-                />
-                {errors.email && (
-                  <p className="form-error-msg">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Phone */}
+              {/* Phone (Mandatory) */}
               <div>
                 <label className="form-label" htmlFor="staffPhone">Contact Phone *</label>
-                <input
-                  type="text"
-                  id="staffPhone"
-                  value={phone}
-                  placeholder="+971 50 000 0000"
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={`form-input ${errors.phone ? 'form-input-error' : ''}`}
-                />
+                <div className="flex gap-2">
+                  <CountryCodeSelect 
+                    value={phoneCountry} 
+                    onChange={setPhoneCountry} 
+                  />
+                  <input
+                    type="text"
+                    id="staffPhone"
+                    value={phoneNo}
+                    placeholder="50 123 4567"
+                    onChange={(e) => setPhoneNo(e.target.value.replace(/[^0-9\s-]/g, ''))}
+                    className={`form-input flex-1 ${errors.phone ? 'form-input-error' : ''}`}
+                  />
+                </div>
                 {errors.phone && (
                   <p className="form-error-msg">{errors.phone}</p>
                 )}
+              </div>
+
+              {/* Emergency Contact Phone (Mandatory) */}
+              <div>
+                <label className="form-label" htmlFor="emergencyPhone">Emergency Contact *</label>
+                <div className="flex gap-2">
+                  <CountryCodeSelect 
+                    value={emergencyCountry} 
+                    onChange={setEmergencyCountry} 
+                  />
+                  <input
+                    type="text"
+                    id="emergencyPhone"
+                    value={emergencyNo}
+                    placeholder="50 987 6543"
+                    onChange={(e) => setEmergencyNo(e.target.value.replace(/[^0-9\s-]/g, ''))}
+                    className={`form-input flex-1 ${errors.emergencyPhone ? 'form-input-error' : ''}`}
+                  />
+                </div>
+                {errors.emergencyPhone && (
+                  <p className="form-error-msg">{errors.emergencyPhone}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="form-grid-2col">
+              {/* Shift Selection (Mandatory) */}
+              <div>
+                <label className="form-label" htmlFor="staffShift">Roster Shift Time *</label>
+                <select
+                  id="staffShift"
+                  value={shiftId}
+                  onChange={(e) => setShiftId(e.target.value)}
+                  className={`form-select ${errors.shiftId ? 'form-input-error' : ''}`}
+                >
+                  <option value="">-- Choose Shift --</option>
+                  {shifts.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.id} : {s.time})
+                    </option>
+                  ))}
+                </select>
+                {errors.shiftId && (
+                  <p className="form-error-msg">{errors.shiftId}</p>
+                )}
+              </div>
+
+              {/* Status Toggle */}
+              <div>
+                <label className="form-label" htmlFor="staffStatus">Current active status</label>
+                <select
+                  id="staffStatus"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="form-select uppercase tracking-wide font-bold"
+                >
+                  <option value="active">Active (On Duty Eligible)</option>
+                  <option value="on-leave">On Leave / Vacation</option>
+                </select>
               </div>
             </div>
 
@@ -216,11 +437,9 @@ const OnboardStaffForm = ({
                     const file = e.target.files[0];
                     if (file) {
                       setGovtProofFileName(file.name);
-                      // If image, create local object url for preview, else use a placeholder illustration
                       if (file.type.startsWith('image/')) {
                         setGovtProofFileUrl(URL.createObjectURL(file));
                       } else {
-                        // PDF placeholder illustration
                         setGovtProofFileUrl('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop');
                       }
                     }
@@ -266,36 +485,6 @@ const OnboardStaffForm = ({
               {errors.govtProofFile && (
                 <p className="form-error-msg">{errors.govtProofFile}</p>
               )}
-            </div>
-
-            {/* Professional Description / Details */}
-            <div>
-              <label className="form-label" htmlFor="staffDetails">Professional Description / Details *</label>
-              <textarea
-                id="staffDetails"
-                rows={2}
-                value={details}
-                placeholder="e.g. Dedicated professional with credentials in customer service and emergency response."
-                onChange={(e) => setDetails(e.target.value)}
-                className={`form-input !h-auto py-2 ${errors.details ? 'form-input-error' : ''}`}
-              />
-              {errors.details && (
-                <p className="form-error-msg">{errors.details}</p>
-              )}
-            </div>
-
-            {/* Status Toggle */}
-            <div>
-              <label className="form-label" htmlFor="staffStatus">Current active status</label>
-              <select
-                id="staffStatus"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="form-select uppercase tracking-wide font-bold"
-              >
-                <option value="active">Active (On Duty Eligible)</option>
-                <option value="on-leave">On Leave / Vacation</option>
-              </select>
             </div>
 
           </div>

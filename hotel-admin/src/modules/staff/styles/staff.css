@@ -111,3 +111,38 @@
 .staff-log-cell-duration {
   @apply font-mono text-slate-400;
 }
+
+/* Staff Filters Single Row Layout */
+.staff-filters-container {
+  @apply p-4 w-full bg-white border-b border-slate-200/80;
+}
+
+.staff-filters-wrapper {
+  @apply flex flex-nowrap items-center gap-2.5 overflow-x-auto w-full;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.staff-filters-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.staff-search-container {
+  @apply relative flex items-center min-w-[200px] grow max-w-[260px] shrink-0;
+}
+
+.staff-search-input {
+  @apply w-full pl-9 pr-12 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800 font-medium focus:border-accent outline-none bg-white hover:border-slate-300 transition-colors shadow-sm;
+}
+
+.staff-filter-select-container {
+  @apply min-w-[130px] shrink-0;
+}
+
+.staff-filter-select {
+  @apply w-full pl-8 pr-2.5 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-700 font-medium focus:border-accent outline-none bg-white hover:border-slate-300 transition-colors cursor-pointer shadow-sm;
+}
+
+.staff-filter-actions {
+  @apply ml-auto flex items-center gap-2.5 shrink-0;
+}
