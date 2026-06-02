@@ -1,63 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarRange } from 'lucide-react';
 import ShiftTimings from './components/ShiftTimings';
 import ShiftStats from './components/ShiftStats';
-
-// Rich Mock data for Staff (matching StaffPage.jsx)
-const initialStaff = [
-  { 
-    id: 'STF-02', 
-    name: 'Sarah Connor', 
-    role: 'Front Desk Manager', 
-    dept: 'Front Office', 
-    email: 'sarah.c@hms.com', 
-    phone: '+971 50 234 5678', 
-    status: 'active', 
-    joined: 'Jan 2022',
-    isCheckedIn: false,
-    lastCheckIn: null,
-    details: 'Expert front-office liaison supervisor specialized in guest satisfaction and VIP check-in pipelines.',
-    address: 'Apt 204, Downtown Boulevard, Dubai, UAE',
-    govtProofType: 'National ID',
-    govtProofId: '784-1995-1234567-1',
-    govtProofFileName: 'emirates_id_front_sarah.jpg',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-01',
-    logs: []
-  },
-  { 
-    id: 'STF-04', 
-    name: 'Maria Gonzalez', 
-    role: 'Executive Housekeeper', 
-    dept: 'Housekeeping', 
-    email: 'maria.g@hms.com', 
-    phone: '+971 50 456 7890', 
-    status: 'active', 
-    joined: 'Mar 2022',
-    isCheckedIn: true,
-    lastCheckIn: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
-    details: 'Executive housekeeping professional leading room staging and standards compliance.',
-    address: 'Flat 10, Jumeirah Village Circle, Dubai, UAE',
-    govtProofType: 'National ID',
-    govtProofId: '784-1988-7654321-2',
-    govtProofFileName: 'emirates_id_front_maria.png',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-01',
-    logs: []
-  }
-];
+import { getShifts, createShift, updateShift, deleteShift } from '../../api/shifts';
 
 const ShiftsPage = () => {
-  // Local staff database state
-  const [staff, setStaff] = useState(initialStaff);
-
-  // Shift list state
-  const [shifts, setShifts] = useState([
-    { id: 'SHF-01', name: 'Morning Shift', time: '07:00 AM - 03:00 PM', icon: 'sun', color: 'blue' },
-    { id: 'SHF-02', name: 'Afternoon Shift', time: '03:00 PM - 11:00 PM', icon: 'sunset', color: 'orange' },
-    { id: 'SHF-03', name: 'Night Shift', time: '11:00 PM - 07:00 AM', icon: 'moon', color: 'indigo' },
-    { id: 'SHF-04', name: 'Executive Shift', time: '09:00 AM - 06:00 PM', icon: 'briefcase', color: 'purple' }
-  ]);
+  // Dynamic Shift and Stats state loaded from backend database API
+  const [shifts, setShifts] = useState([]);
+  const [stats, setStats] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Slide-in toast alerts
   const [toasts, setToasts] = useState([]);
@@ -70,56 +21,80 @@ const ShiftsPage = () => {
     }, 4500);
   };
 
-  // Callback to assign employee shifts
-  const handleAssignShift = (memberId, shiftId) => {
-    setStaff((prevStaff) => 
-      prevStaff.map((m) => {
-        if (m.id === memberId) {
-          const shift = shifts.find(s => s.id === shiftId);
-          addToast(`Shift timing for ${m.name} updated to ${shift ? shift.name : 'None'}.`, 'success');
-          return { ...m, shiftId };
-        }
-        return m;
-      })
-    );
+  // Helper to fetch all shifts and dynamically aggregated stats from backend
+  const fetchShifts = async (silent = false) => {
+    try {
+      if (!silent) setIsLoading(true);
+      const res = await getShifts();
+      if (res && res.success) {
+        setShifts(res.data.shifts || []);
+        setStats(res.data.stats || {});
+      } else {
+        addToast(res.message || 'Failed to load shifts list.', 'error');
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Error connecting to server. Failed to fetch shifts.';
+      addToast(errMsg, 'error');
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
   };
 
-  // Callback to create new custom shifts
-  const handleCreateShift = (newShift) => {
-    const nextId = `SHF-0${shifts.length + 1}`;
-    const createdShift = { ...newShift, id: nextId };
-    setShifts((prevShifts) => [...prevShifts, createdShift]);
-    addToast(`Custom shift "${newShift.name}" successfully created!`, 'success');
+  // Load shifts on component mounting
+  useEffect(() => {
+    fetchShifts();
+  }, []);
+
+  // Callback to create new custom shifts in backend MySQL database
+  const handleCreateShift = async (newShift) => {
+    try {
+      const res = await createShift(newShift);
+      if (res && res.success) {
+        addToast(`Custom shift "${res.data.name}" successfully created!`, 'success');
+        fetchShifts(true); // Refresh from backend silently
+      } else {
+        addToast(res.message || 'Failed to create custom shift.', 'error');
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Error registering custom shift.';
+      addToast(errMsg, 'error');
+    }
   };
 
-  // Callback to update an existing shift
-  const handleUpdateShift = (updatedShift) => {
-    setShifts((prevShifts) => 
-      prevShifts.map((s) => s.id === updatedShift.id ? { ...s, ...updatedShift } : s)
-    );
-    addToast(`Shift "${updatedShift.name}" successfully updated.`, 'success');
+  // Callback to update an existing shift in backend database
+  const handleUpdateShift = async (updatedShift) => {
+    try {
+      const res = await updateShift(updatedShift.id, updatedShift);
+      if (res && res.success) {
+        addToast(`Shift "${res.data.name}" successfully updated.`, 'success');
+        fetchShifts(true); // Refresh from backend silently
+      } else {
+        addToast(res.message || 'Failed to update shift.', 'error');
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Error modifying shift specifications.';
+      addToast(errMsg, 'error');
+    }
   };
 
-  // Callback to delete/retire a shift timing
-  const handleDeleteShift = (shiftId) => {
+  // Callback to delete/retire a shift timing in backend database
+  const handleDeleteShift = async (shiftId) => {
     const shift = shifts.find(s => s.id === shiftId);
     if (!shift) return;
 
     if (window.confirm(`Are you sure you want to retire and delete "${shift.name}"? This cannot be undone.`)) {
-      setShifts((prevShifts) => prevShifts.filter((s) => s.id !== shiftId));
-      
-      let count = 0;
-      setStaff((prevStaff) => 
-        prevStaff.map((member) => {
-          if (member.shiftId === shiftId) {
-            count++;
-            return { ...member, shiftId: 'SHF-01' }; // default morning
-          }
-          return member;
-        })
-      );
-
-      addToast(`Shift "${shift.name}" has been retired. ${count} assigned employees reset to Morning Shift.`, 'warning');
+      try {
+        const res = await deleteShift(shiftId);
+        if (res && res.success) {
+          addToast(`Shift "${shift.name}" has been retired and deleted successfully.`, 'warning');
+          fetchShifts(true); // Refresh from backend silently
+        } else {
+          addToast(res.message || 'Failed to retire shift.', 'error');
+        }
+      } catch (err) {
+        const errMsg = err.response?.data?.message || 'Error deleting shift from inventory.';
+        addToast(errMsg, 'error');
+      }
     }
   };
 
@@ -139,18 +114,27 @@ const ShiftsPage = () => {
         </div>
       </div>
 
-      {/* 2. Unified Stats Summary Grid */}
-      <ShiftStats staff={staff} shifts={shifts} />
+      {/* 2. Loading State / Stats & Shift Timings */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white/50 border border-slate-200 rounded-2xl shadow-sm">
+          <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Loading operational shifts...</p>
+        </div>
+      ) : (
+        <>
+          {/* Unified Stats Summary Grid */}
+          <ShiftStats stats={stats} />
 
-      {/* 3. Unified Shifts Component */}
-      <ShiftTimings 
-        staff={staff}
-        shifts={shifts}
-        onAssignShift={handleAssignShift}
-        onCreateShift={handleCreateShift}
-        onUpdateShift={handleUpdateShift}
-        onDeleteShift={handleDeleteShift}
-      />
+          {/* Unified Shifts Component */}
+          <ShiftTimings 
+            staff={[]}
+            shifts={shifts}
+            onCreateShift={handleCreateShift}
+            onUpdateShift={handleUpdateShift}
+            onDeleteShift={handleDeleteShift}
+          />
+        </>
+      )}
 
       {/* 3. Visual Toast Notification Overlay */}
       <div className="toast-container">

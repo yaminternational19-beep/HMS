@@ -3,16 +3,12 @@ import { Clock, Users, Sun, Moon } from 'lucide-react';
 import StatsCard from '../../../components/global/stats/StatsCard';
 import StatsGrid from '../../../components/global/stats/StatsGrid';
 
-const ShiftStats = ({ staff = [], shifts = [] }) => {
-  // Calculate dynamic stats
-  const totalShifts = shifts.length;
-  const totalScheduled = staff.filter(m => m.shiftId).length;
-  
-  // Count morning shift employees (SHF-01)
-  const morningCoverage = staff.filter(m => m.shiftId === 'SHF-01').length;
-  
-  // Count night shift employees (SHF-03)
-  const nightCoverage = staff.filter(m => m.shiftId === 'SHF-03').length;
+const ShiftStats = ({ stats = {} }) => {
+  // Read dynamic stats aggregated by the backend Django app
+  const totalShifts = stats.totalShifts || 0;
+  const totalScheduled = stats.totalScheduled || 0;
+  const morningCoverage = stats.morningCoverage || 0;
+  const nightCoverage = stats.nightCoverage || 0;
 
   return (
     <StatsGrid>
