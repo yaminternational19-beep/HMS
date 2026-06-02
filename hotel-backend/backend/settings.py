@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.authentication',
     'apps.superadmin.rooms',
     'apps.superadmin.shifts',
+    'apps.superadmin.staff',
     'core',
 ]
 

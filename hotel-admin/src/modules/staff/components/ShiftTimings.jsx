@@ -186,7 +186,7 @@ const ShiftTimings = ({
                       <div 
                         key={member.id} 
                         className="relative h-7 w-7 rounded-lg overflow-hidden border border-white bg-slate-100 shadow-sm flex items-center justify-center font-bold text-slate-600 text-[9px] uppercase select-none shrink-0"
-                        title={`${member.name} (${member.role})`}
+                        title={`${member.name} (${member.role || member.dept || 'Staff Agent'})`}
                       >
                         {member.govtProofFileUrl ? (
                           <img 
@@ -326,7 +326,7 @@ const ShiftTimings = ({
               <thead>
                 <tr className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 z-10 border-b border-slate-100">
                   <th className="px-4 py-3">Employee</th>
-                  <th className="px-4 py-3">Clearance Clearance</th>
+                  <th className="px-4 py-3">Roster Role</th>
                   <th className="px-4 py-3">Current Assignment</th>
                   <th className="px-4 py-3 text-center">Change Shift</th>
                 </tr>
@@ -354,7 +354,7 @@ const ShiftTimings = ({
                           </div>
                           <div>
                             <div className="font-bold text-slate-800 text-xs">{member.name}</div>
-                            <div className="text-[9px] text-slate-400 font-semibold">{member.role}</div>
+                            <div className="text-[9px] text-slate-400 font-semibold">{member.role || member.dept || 'Staff Agent'}</div>
                           </div>
                         </div>
                       </td>

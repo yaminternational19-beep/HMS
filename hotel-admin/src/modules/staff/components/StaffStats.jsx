@@ -3,12 +3,18 @@ import { Users, UserCheck, UserMinus, Shield } from 'lucide-react';
 import StatsCard from '../../../components/global/stats/StatsCard';
 import StatsGrid from '../../../components/global/stats/StatsGrid';
 
-const StaffStats = ({ data = [] }) => {
-  // Calculate dynamic statistics
-  const total = data.length;
-  const activeDuty = data.filter(m => m.isCheckedIn).length;
-  const onLeave = data.filter(m => m.status === 'on-leave').length;
-  const frontOffice = data.filter(m => m.dept === 'Front Office').length;
+const StaffStats = ({ stats, data = [] }) => {
+  // Calculate dynamic statistics (fallback to robust case-insensitive matching if backend stats not present yet)
+  const total = stats ? stats.total : data.length;
+  const activeDuty = stats ? stats.activeDuty : data.filter(m => m.isCheckedIn).length;
+  const onLeave = stats ? stats.onLeave : data.filter(m => m.status === 'on-leave').length;
+  const frontOffice = stats ? stats.frontOffice : data.filter(m => 
+    m.dept && (
+      m.dept.toLowerCase().includes('front') || 
+      m.dept.toLowerCase().includes('concierge') || 
+      m.dept.toLowerCase().includes('office')
+    )
+  ).length;
 
   return (
     <StatsGrid>

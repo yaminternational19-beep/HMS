@@ -3,10 +3,12 @@ import { CalendarRange } from 'lucide-react';
 import ShiftTimings from './components/ShiftTimings';
 import ShiftStats from './components/ShiftStats';
 import { getShifts, createShift, updateShift, deleteShift } from '../../api/shifts';
+import { getStaff } from '../../api/staff';
 
 const ShiftsPage = () => {
   // Dynamic Shift and Stats state loaded from backend database API
   const [shifts, setShifts] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [stats, setStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,9 +42,22 @@ const ShiftsPage = () => {
     }
   };
 
+  // Fetch staff list to show assigned staff counts
+  const fetchStaff = async () => {
+    try {
+      const res = await getStaff();
+      if (res && res.success) {
+        setStaff(res.data.staff || []);
+      }
+    } catch (err) {
+      console.error('Failed to load staff list for shift display', err);
+    }
+  };
+
   // Load shifts on component mounting
   useEffect(() => {
     fetchShifts();
+    fetchStaff();
   }, []);
 
   // Callback to create new custom shifts in backend MySQL database
@@ -127,7 +142,7 @@ const ShiftsPage = () => {
 
           {/* Unified Shifts Component */}
           <ShiftTimings 
-            staff={[]}
+            staff={staff}
             shifts={shifts}
             onCreateShift={handleCreateShift}
             onUpdateShift={handleUpdateShift}

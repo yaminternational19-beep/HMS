@@ -14,11 +14,11 @@ const StaffFilters = ({
   shiftFilter,
   onShiftFilterChange,
   shifts = [],
+  departments = ['all', 'Administration', 'Front Office', 'Housekeeping', 'Maintenance', 'Food & Beverage'],
   onClearFilters,
   onExportPDF,
   onExportExcel
 }) => {
-  const departments = ['all', 'Administration', 'Front Office', 'Housekeeping', 'Maintenance', 'Food & Beverage'];
 
   return (
     <div className="staff-filters-container">
@@ -57,7 +57,7 @@ const StaffFilters = ({
               onChange={(e) => onDeptFilterChange(e.target.value)}
               className="staff-filter-select"
             >
-              <option value="all">All Departments</option>
+              <option value="all">All Roles / Depts</option>
               {departments.filter(d => d !== 'all').map(dept => (
                 <option key={dept} value={dept}>{dept}</option>
               ))}

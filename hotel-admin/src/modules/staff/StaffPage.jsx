@@ -4,173 +4,15 @@ import StaffFilters from './components/StaffFilters';
 import StaffStats from './components/StaffStats';
 import StaffTable from './components/StaffTable';
 import OnboardStaffForm from './components/OnboardStaffForm';
-import StaffLogModal from './components/StaffLogModal';
 import { getShifts } from '../../api/shifts';
+import { getStaff, createStaff, updateStaff, deleteStaff } from '../../api/staff';
 import { exportToPDF, exportToExcel } from './services/staffExport.service';
 import './styles/staff.css';
 
-// Rich Mock data for Staff with pre-populated checkin logs, emergency numbers, and avatar images
-const initialStaff = [
-  { 
-    id: 'STF-01', 
-    uniqueCode: '83719273',
-    name: 'Praveen Reddy', 
-    role: 'Corporate Director', 
-    dept: 'Administration', 
-    email: 'praveen@hms.com', 
-    phone: '+971 50 123 4567', 
-    emergencyPhone: '+971 50 999 1111',
-    status: 'active', 
-    joined: 'Oct 2021',
-    isCheckedIn: true,
-    lastCheckIn: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(),
-    address: 'Villa 12, Palm Jumeirah, Dubai, UAE',
-    govtProofType: 'Passport',
-    govtProofId: 'DXB-983726-P',
-    govtProofFileName: 'passport_scan_praveen.pdf',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop',
-    profileFileName: 'profile_praveen.jpg',
-    profileFileUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-04',
-    logs: [
-      { id: 101, date: 'May 22, 2026', checkIn: '08:30 AM', checkOut: '06:00 PM', duration: '9h 30m' },
-      { id: 102, date: 'May 21, 2026', checkIn: '08:45 AM', checkOut: '05:45 PM', duration: '9h 00m' }
-    ]
-  },
-  { 
-    id: 'STF-02', 
-    uniqueCode: '29384756',
-    password: 'SarahHMS2026',
-    name: 'Sarah Connor', 
-    role: 'Front Desk Manager', 
-    dept: 'Front Office', 
-    email: 'sarah.c@hms.com', 
-    phone: '+971 50 234 5678', 
-    emergencyPhone: '+971 50 999 2222',
-    status: 'active', 
-    joined: 'Jan 2022',
-    isCheckedIn: false,
-    lastCheckIn: null,
-    address: 'Apt 204, Downtown Boulevard, Dubai, UAE',
-    govtProofType: 'National ID',
-    govtProofId: '784-1995-1234567-1',
-    govtProofFileName: 'emirates_id_front_sarah.jpg',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
-    profileFileName: 'profile_sarah.jpg',
-    profileFileUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-01',
-    logs: [
-      { id: 201, date: 'May 22, 2026', checkIn: '09:00 AM', checkOut: '05:00 PM', duration: '8h 00m' },
-      { id: 202, date: 'May 21, 2026', checkIn: '08:50 AM', checkOut: '05:10 PM', duration: '8h 20m' }
-    ]
-  },
-  { 
-    id: 'STF-03', 
-    uniqueCode: '50192837',
-    password: 'JohnHMS2026',
-    name: 'John Doe', 
-    role: 'Concierge Clerk', 
-    dept: 'Front Office', 
-    email: 'john.doe@hms.com', 
-    phone: '+971 50 345 6789', 
-    emergencyPhone: '+971 50 999 3333',
-    status: 'active', 
-    joined: 'Jun 2023',
-    isCheckedIn: false,
-    lastCheckIn: null,
-    address: 'Building A-1, Al Barsha Heights, Dubai, UAE',
-    govtProofType: 'Driver License',
-    govtProofId: 'DL-2023-887162',
-    govtProofFileName: 'uae_license_johndoe.png',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop',
-    profileFileName: 'profile_johndoe.jpg',
-    profileFileUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-02',
-    logs: [
-      { id: 301, date: 'May 22, 2026', checkIn: '10:00 AM', checkOut: '06:00 PM', duration: '8h 00m' }
-    ]
-  },
-  { 
-    id: 'STF-04', 
-    uniqueCode: '49382716',
-    name: 'Maria Gonzalez', 
-    role: 'Executive Housekeeper', 
-    dept: 'Housekeeping', 
-    email: 'maria.g@hms.com', 
-    phone: '+971 50 456 7890', 
-    emergencyPhone: '+971 50 999 4444',
-    status: 'active', 
-    joined: 'Mar 2022',
-    isCheckedIn: true,
-    lastCheckIn: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
-    address: 'Flat 10, Jumeirah Village Circle, Dubai, UAE',
-    govtProofType: 'National ID',
-    govtProofId: '784-1988-7654321-2',
-    govtProofFileName: 'emirates_id_front_maria.png',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop',
-    profileFileName: 'profile_maria.jpg',
-    profileFileUrl: 'https://images.unsplash.com/photo-1548142813-c348350df52b?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-01',
-    logs: [
-      { id: 401, date: 'May 22, 2026', checkIn: '08:00 AM', checkOut: '04:00 PM', duration: '8h 00m' }
-    ]
-  },
-  { 
-    id: 'STF-05', 
-    uniqueCode: '60293847',
-    password: 'DavidHMS2026',
-    name: 'David Smith', 
-    role: 'Maintenance Lead', 
-    dept: 'Maintenance', 
-    email: '', 
-    phone: '+971 50 567 8901', 
-    emergencyPhone: '+971 50 999 5555',
-    status: 'on-leave', 
-    joined: 'Aug 2020',
-    isCheckedIn: false,
-    lastCheckIn: null,
-    address: 'Street 4B, Al Quoz Industrial Area, Dubai, UAE',
-    govtProofType: 'Driver License',
-    govtProofId: 'DL-2019-992019',
-    govtProofFileName: 'driver_license_david.jpg',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop',
-    profileFileName: 'profile_david.jpg',
-    profileFileUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-03',
-    logs: [
-      { id: 501, date: 'May 15, 2026', checkIn: '08:30 AM', checkOut: '05:30 PM', duration: '9h 00m' }
-    ]
-  },
-  { 
-    id: 'STF-06', 
-    uniqueCode: '71029384',
-    name: 'Alex Wong', 
-    role: 'Head Chef', 
-    dept: 'Food & Beverage', 
-    email: 'alex.w@hms.com', 
-    phone: '+971 50 678 9012', 
-    emergencyPhone: '+971 50 999 6666',
-    status: 'active', 
-    joined: 'Nov 2022',
-    isCheckedIn: false,
-    lastCheckIn: null,
-    address: 'Penthouse 3, Dubai Marina Heights, Dubai, UAE',
-    govtProofType: 'Passport',
-    govtProofId: 'HKG-887162-W',
-    govtProofFileName: 'passport_scan_alexwong.pdf',
-    govtProofFileUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&auto=format&fit=crop',
-    profileFileName: 'profile_alex.jpg',
-    profileFileUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
-    shiftId: 'SHF-02',
-    logs: [
-      { id: 601, date: 'May 22, 2026', checkIn: '11:00 AM', checkOut: '08:00 PM', duration: '9h 00m' }
-    ]
-  }
-];
-
 const StaffPage = () => {
   // Roster lists and search filters states
-  const [staff, setStaff] = useState(initialStaff);
+  const [staff, setStaff] = useState([]);
+  const [stats, setStats] = useState({ total: 0, activeDuty: 0, onLeave: 0, frontOffice: 0 });
   const [shifts, setShifts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
@@ -183,7 +25,6 @@ const StaffPage = () => {
   // Modals active triggers
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
-  const [viewingLogsMember, setViewingLogsMember] = useState(null);
 
   // Active form field inputs
   const [name, setName] = useState('');
@@ -224,6 +65,19 @@ const StaffPage = () => {
     }, 4500);
   };
 
+  const fetchStaff = async () => {
+    try {
+      const res = await getStaff();
+      if (res && res.success) {
+        setStaff(res.data.staff || []);
+        setStats(res.data.stats || { total: 0, activeDuty: 0, onLeave: 0, frontOffice: 0 });
+      }
+    } catch (err) {
+      console.error('Failed to load staff directory', err);
+      addToast('Failed to load staff directory from database.', 'error');
+    }
+  };
+
   // Fetch active shifts config dynamically from database on mount
   useEffect(() => {
     const fetchShifts = async () => {
@@ -237,11 +91,12 @@ const StaffPage = () => {
       }
     };
     fetchShifts();
+    fetchStaff();
   }, []);
 
   // Lock background scrolls when overlays are open
   useEffect(() => {
-    if (isFormOpen || viewingLogsMember) {
+    if (isFormOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -249,7 +104,7 @@ const StaffPage = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isFormOpen, viewingLogsMember]);
+  }, [isFormOpen]);
 
   // Load and pre-fill form fields on edit vs add
   useEffect(() => {
@@ -261,25 +116,13 @@ const StaffPage = () => {
         setPassword(editingMember.password || '');
         setEmail(editingMember.email || '');
         
-        // Parse Contact Phone
-        const pParts = (editingMember.phone || '').split(' ');
-        if (pParts.length >= 2 && pParts[0].startsWith('+')) {
-          setPhoneCountry(pParts[0]);
-          setPhoneNo(pParts.slice(1).join(' '));
-        } else {
-          setPhoneCountry('+971');
-          setPhoneNo(editingMember.phone || '');
-        }
+        // Set Contact Phone
+        setPhoneCountry(editingMember.phoneCountry || '+971');
+        setPhoneNo(editingMember.phoneNo || '');
 
-        // Parse Emergency Contact Phone
-        const eParts = (editingMember.emergencyPhone || '').split(' ');
-        if (eParts.length >= 2 && eParts[0].startsWith('+')) {
-          setEmergencyCountry(eParts[0]);
-          setEmergencyNo(eParts.slice(1).join(' '));
-        } else {
-          setEmergencyCountry('+971');
-          setEmergencyNo(editingMember.emergencyPhone || '');
-        }
+        // Set Emergency Contact Phone
+        setEmergencyCountry(editingMember.emergencyCountry || '+971');
+        setEmergencyNo(editingMember.emergencyNo || '');
 
         setShiftId(editingMember.shiftId || '');
         setStatus(editingMember.status);
@@ -362,95 +205,74 @@ const StaffPage = () => {
   };
 
   // Add / Edit Submission Handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
-    const fullPhone = `${phoneCountry} ${phoneNo.trim()}`;
-    const fullEmergency = `${emergencyCountry} ${emergencyNo.trim()}`;
 
     const trimmedDept = dept.trim();
     const isComplianceRole = 
       trimmedDept && (trimmedDept.toLowerCase().includes('front') || trimmedDept.toLowerCase().includes('maintain'));
 
+    const formData = new FormData();
+    formData.append('name', name.trim());
+    formData.append('dept', trimmedDept);
+    formData.append('password', isComplianceRole ? password.trim() : '');
+    formData.append('email', email.trim());
+    formData.append('phoneCountry', phoneCountry);
+    formData.append('phoneNo', phoneNo.trim());
+    formData.append('emergencyCountry', emergencyCountry);
+    formData.append('emergencyNo', emergencyNo.trim());
+    formData.append('shiftId', shiftId);
+    formData.append('shift_id', shiftId);
+    formData.append('status', status);
+    formData.append('address', address.trim());
+    formData.append('govtProofType', govtProofType);
+    formData.append('govtProofId', govtProofId.trim());
+
+    // Check profile file upload
+    const profileInput = document.getElementById('profileFileInput');
+    if (profileInput && profileInput.files[0]) {
+      formData.append('profileFile', profileInput.files[0]);
+    } else {
+      formData.append('profileFileName', profileFileName || '');
+      formData.append('profileFileUrl', profileFileUrl || '');
+    }
+
+    // Check government scan upload
+    const govtInput = document.getElementById('govtProofFileInput');
+    if (govtInput && govtInput.files[0]) {
+      formData.append('govtProofFile', govtInput.files[0]);
+    } else {
+      formData.append('govtProofFileName', govtProofFileName || '');
+      formData.append('govtProofFileUrl', govtProofFileUrl || '');
+    }
+
     if (editingMember) {
       // Edit mode: map update
-      setStaff((prevStaff) => 
-        prevStaff.map((m) => m.id === editingMember.id 
-          ? {
-              ...m,
-              name: name.trim(),
-              role: trimmedDept,
-              dept: trimmedDept,
-              password: isComplianceRole ? password.trim() : '',
-              email: email.trim(),
-              phone: fullPhone,
-              emergencyPhone: fullEmergency,
-              shiftId,
-              status,
-              address: address.trim(),
-              govtProofType,
-              govtProofId: govtProofId.trim(),
-              govtProofFileName,
-              govtProofFileUrl,
-              profileFileName,
-              profileFileUrl
-            }
-          : m
-        )
-      );
-      addToast(`Staff profile for ${name.trim()} updated successfully.`, 'success');
-    } else {
-      // Onboard mode: generate incremental ID and ensure uniqueness
-      const getNextId = () => {
-        const numericIds = staff.map(m => parseInt(m.id.replace('STF-', '')));
-        const maxId = Math.max(...numericIds, 0);
-        return `STF-${String(maxId + 1).padStart(2, '0')}`;
-      };
-
-      const generateUniqueCode = () => {
-        let code;
-        let isUnique = false;
-        while (!isUnique) {
-          code = String(Math.floor(10000000 + Math.random() * 90000000));
-          if (!staff.some(m => m.uniqueCode === code)) {
-            isUnique = true;
-          }
+      try {
+        const res = await updateStaff(editingMember.id, formData);
+        if (res && res.success) {
+          addToast(`Staff profile for ${name.trim()} updated successfully.`, 'success');
+          fetchStaff();
         }
-        return code;
-      };
-
-      const nextId = getNextId();
-      const newCode = generateUniqueCode();
-      const formatMonthYear = () => new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-
-      const newMember = {
-        id: nextId,
-        uniqueCode: newCode,
-        password: isComplianceRole ? password.trim() : '',
-        name: name.trim(),
-        role: trimmedDept,
-        dept: trimmedDept,
-        email: email.trim(),
-        phone: fullPhone,
-        emergencyPhone: fullEmergency,
-        shiftId,
-        status,
-        joined: formatMonthYear(),
-        isCheckedIn: false,
-        lastCheckIn: null,
-        address: address.trim(),
-        govtProofType,
-        govtProofId: govtProofId.trim(),
-        govtProofFileName,
-        govtProofFileUrl,
-        profileFileName,
-        profileFileUrl: profileFileUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop',
-        logs: []
-      };
-
-      setStaff((prevStaff) => [newMember, ...prevStaff]);
-      addToast(`Staff member ${name.trim()} onboarded successfully! Assigned ID: ${nextId}.`, 'success');
+      } catch (err) {
+        console.error(err);
+        const errMsg = err.response?.data?.message || 'Failed to update staff profile.';
+        addToast(errMsg, 'error');
+      }
+    } else {
+      // Onboard mode: create new member
+      try {
+        const res = await createStaff(formData);
+        if (res && res.success) {
+          addToast(`Staff member ${name.trim()} onboarded successfully! Assigned ID: ${res.data.id}.`, 'success');
+          fetchStaff();
+        }
+      } catch (err) {
+        console.error(err);
+        const errMsg = err.response?.data?.message || 'Failed to onboard staff agent.';
+        addToast(errMsg, 'error');
+      }
     }
 
     setIsFormOpen(false);
@@ -458,12 +280,17 @@ const StaffPage = () => {
   };
 
   // Offboard Delete Handler
-  const handleDeleteMember = (memberId, memberName) => {
+  const handleDeleteMember = async (memberId, memberName) => {
     if (window.confirm(`Are you sure you want to offboard and retire ${memberName} (${memberId}) from active HMS rosters?`)) {
-      setStaff((prevStaff) => prevStaff.filter((m) => m.id !== memberId));
-      addToast(`Staff member ${memberName} has been retired from rosters.`, 'warning');
-      if (viewingLogsMember && viewingLogsMember.id === memberId) {
-        setViewingLogsMember(null);
+      try {
+        const res = await deleteStaff(memberId);
+        if (res && res.success) {
+          addToast(`Staff member ${memberName} has been retired from rosters.`, 'warning');
+          fetchStaff();
+        }
+      } catch (err) {
+        console.error(err);
+        addToast('Failed to retire staff member.', 'error');
       }
     }
   };
@@ -547,6 +374,9 @@ const StaffPage = () => {
     exportToExcel(dataToExport, addToast);
   };
 
+  // Extract unique departments/roles from staff directory dynamically
+  const uniqueDepartments = ['all', ...new Set(staff.map(m => m.dept).filter(Boolean))];
+
   return (
     <div className="rooms-page-container">
       
@@ -570,7 +400,7 @@ const StaffPage = () => {
       </div>
  
       {/* 2. Unified Stats Summary Grid */}
-      <StaffStats data={staff} />
+      <StaffStats stats={stats} data={staff} />
  
       {/* 3. Unified Workspace (Filters + Table) */}
       <div className="booking-workspace-container">
@@ -586,6 +416,7 @@ const StaffPage = () => {
           shiftFilter={shiftFilter}
           onShiftFilterChange={setShiftFilter}
           shifts={shifts}
+          departments={uniqueDepartments}
           onClearFilters={handleClearFilters}
           onExportPDF={handleExportPDF}
           onExportExcel={handleExportExcel}
@@ -594,7 +425,6 @@ const StaffPage = () => {
         <StaffTable 
           data={filteredStaff}
           shifts={shifts}
-          onViewLogs={setViewingLogsMember}
           onEdit={handleEditClick}
           onDelete={handleDeleteMember}
           selectedIds={selectedIds}
@@ -647,12 +477,7 @@ const StaffPage = () => {
         setPassword={setPassword}
       />
 
-      {/* 6. View Activity Attendance Logs Modal dialog */}
-      <StaffLogModal 
-        viewingLogsMember={viewingLogsMember}
-        shifts={shifts}
-        onClose={() => setViewingLogsMember(null)}
-      />
+
 
       {/* 7. Visual Toast notifications overlay */}
       <div className="toast-container">

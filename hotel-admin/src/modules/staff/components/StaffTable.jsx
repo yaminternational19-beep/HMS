@@ -6,15 +6,13 @@ import {
   Calendar, 
   Edit, 
   Trash2, 
-  Clock, 
-  Eye 
+  Clock
 } from 'lucide-react';
 import ActionButton from '../../../components/ActionButton';
 
 const StaffTable = ({ 
   data = [], 
   shifts = [],
-  onViewLogs, 
   onEdit, 
   onDelete,
   selectedIds = [],
@@ -164,7 +162,7 @@ const StaffTable = ({
                     {/* Roster Role Column (Redundant icons removed as requested) */}
                     <td>
                       <span className="text-xs text-slate-600 font-semibold">
-                        {member.role}
+                        {member.role || member.dept || 'Staff Agent'}
                       </span>
                     </td>
                     
@@ -230,13 +228,6 @@ const StaffTable = ({
                     {/* Roster Action Column (Leveraging global ActionButtons) */}
                     <td className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        <ActionButton
-                          variant="table-view"
-                          onClick={() => onViewLogs(member)}
-                          icon={Eye}
-                          iconSize={18}
-                          title="View Attendance & Complete State"
-                        />
                         <ActionButton 
                           variant="table-edit"
                           onClick={() => onEdit(member)}

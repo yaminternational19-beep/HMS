@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/auth/', include('apps.authentication.urls')),
     path('api/rooms/', include('apps.superadmin.rooms.urls')),
     path('api/shifts/', include('apps.superadmin.shifts.urls')),
+    path('api/staff/', include('apps.superadmin.staff.urls')),
 ]
 
 # Serve uploaded media files during development (Vite/React accessible)
