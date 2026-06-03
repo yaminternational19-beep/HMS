@@ -6,7 +6,7 @@ import { loginSuperAdmin } from '../api/auth';
 import { setCookie } from '../api/cookieHelper';
 
 const Login = () => {
-  const [email, setEmail] = useState('admin@blackcube.ae');
+  const [email, setEmail] = useState('praveen.reddy@blackcube.ae');
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -133,7 +133,7 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@blackcube.ae"
+                placeholder="praveen.reddy@blackcube.ae"
                 className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl text-sm text-text-main focus:border-accent focus:ring-2 focus:ring-accent/15 outline-none bg-slate-50/50 focus:bg-white transition-all duration-200 font-medium"
               />
             </div>

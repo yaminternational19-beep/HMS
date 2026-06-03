@@ -7,6 +7,7 @@ const routeTitleMap = {
   '/bookings': 'Reservation Records',
   '/rooms': 'Rooms & Property Inventory',
   '/staff': 'Workforce & Shift Roster',
+  '/staff-logs': 'Workforce Attendance Logs',
   '/reports': 'Enterprise Systems Analytics',
 };
 

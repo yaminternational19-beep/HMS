@@ -5,6 +5,7 @@ from apps.superadmin.shifts.models import Shifts
 class StaffSerializer(serializers.ModelSerializer):
     # Map the database ForeignKey relation's shift_id directly to 'shiftId' expected by frontend
     shiftId = serializers.CharField(source='shift_id', required=True)
+    isCheckedIn = serializers.SerializerMethodField()
     joined = serializers.SerializerMethodField()
     phone = serializers.SerializerMethodField()
     emergencyPhone = serializers.SerializerMethodField()
@@ -45,6 +46,10 @@ class StaffSerializer(serializers.ModelSerializer):
         # These fields are generated automatically by our business service layer
         read_only_fields = ['id', 'uniqueCode', 'joined', 'logs', 'role', 'phone', 'emergencyPhone', 'created_at', 'updated_at']
 
+    def get_isCheckedIn(self, obj):
+        from .services import StaffService
+        return StaffService.is_staff_on_duty(obj)
+
     def get_joined(self, obj):
         if obj.created_at:
             return obj.created_at.strftime("%b %Y")
@@ -60,35 +65,7 @@ class StaffSerializer(serializers.ModelSerializer):
         return f"{obj.emergencyCountry} {obj.emergencyNo}"
 
     def get_logs(self, obj):
-        if obj.id == 'STF-01':
-            return [
-                { "id": 101, "date": 'May 22, 2026', "checkIn": '08:30 AM', "checkOut": '06:00 PM', "duration": '9h 30m' },
-                { "id": 102, "date": 'May 21, 2026', "checkIn": '08:45 AM', "checkOut": '05:45 PM', "duration": '9h 00m' }
-            ]
-        elif obj.id == 'STF-02':
-            return [
-                { "id": 201, "date": 'May 22, 2026', "checkIn": '09:00 AM', "checkOut": '05:00 PM', "duration": '8h 00m' },
-                { "id": 202, "date": 'May 21, 2026', "checkIn": '08:50 AM', "checkOut": '05:10 PM', "duration": '8h 20m' }
-            ]
-        elif obj.id == 'STF-03':
-            return [
-                { "id": 301, "date": 'May 22, 2026', "checkIn": '10:00 AM', "checkOut": '06:00 PM', "duration": '8h 00m' }
-            ]
-        elif obj.id == 'STF-04':
-            return [
-                { "id": 401, "date": 'May 22, 2026', "checkIn": '08:00 AM', "checkOut": '04:00 PM', "duration": '8h 00m' }
-            ]
-        elif obj.id == 'STF-05':
-            return [
-                { "id": 501, "date": 'May 15, 2026', "checkIn": '08:30 AM', "checkOut": '05:30 PM', "duration": '9h 00m' }
-            ]
-        elif obj.id == 'STF-06':
-            return [
-                { "id": 601, "date": 'May 22, 2026', "checkIn": '11:00 AM', "checkOut": '08:00 PM', "duration": '9h 00m' }
-            ]
-        return [
-            { "id": 701, "date": 'May 22, 2026', "checkIn": '09:00 AM', "checkOut": '05:00 PM', "duration": '8h 00m' }
-        ]
+        return []
 
     def validate_shiftId(self, value):
         # Enforce referential integrity checks on shifts relation

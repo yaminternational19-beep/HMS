@@ -70,6 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.request_log.RequestLogMiddleware',
     'core.middleware.jwt_auth.JWTAuthenticationMiddleware',
+    'core.middleware.jwt_auth.StaffJWTAuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'

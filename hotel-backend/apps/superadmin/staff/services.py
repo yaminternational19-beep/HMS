@@ -1,6 +1,7 @@
 import random
 from django.db import transaction
 from django.db.models import Q
+from django.contrib.auth.hashers import make_password
 from .models import Staff
 from apps.superadmin.shifts.models import Shifts
 from .validators import StaffValidator
@@ -12,13 +13,66 @@ class StaffService:
     8-digit unique code allocation, dynamic search-matching, and mock seeding.
     """
 
-    @staticmethod
-    def serialize_staff(member: Staff) -> dict:
+    @classmethod
+    def is_staff_on_duty(cls, member: Staff) -> bool:
+        """
+        Determines dynamically if a staff member is currently on duty today.
+        A staff member is on duty if they have logged in since today's shift start time in IST.
+        They are automatically logged out at the end of the day (midnight IST).
+        """
+        from zoneinfo import ZoneInfo
+        from datetime import datetime, time, timedelta, timezone
+        
+        # 1. Get current time in Asia/Kolkata (IST)
+        ist_tz = ZoneInfo('Asia/Kolkata')
+        now_ist = datetime.now(ist_tz)
+        today_ist = now_ist.date()
+        
+        # 2. Find shift start time
+        start_time_obj = time(9, 0) # default fallback
+        if member.shift and member.shift.time:
+            try:
+                # e.g., '07:00 AM - 03:00 PM' -> '07:00 AM'
+                start_part = member.shift.time.split('-')[0].strip()
+                start_time_obj = datetime.strptime(start_part, "%I:%M %p").time()
+            except Exception:
+                pass
+        
+        # 3. Construct today's shift start datetime in IST
+        shift_start_ist = datetime.combine(today_ist, start_time_obj, tzinfo=ist_tz)
+        midnight_ist = datetime.combine(today_ist, time(0, 0, 0), tzinfo=ist_tz)
+        
+        # We allow checking logs from max(midnight, shift_start - 60 mins buffer) to handle early checkins
+        cutoff_ist = max(midnight_ist, shift_start_ist - timedelta(minutes=60))
+        
+        # Convert cutoff time to UTC to query the database
+        cutoff_utc = cutoff_ist.astimezone(timezone.utc)
+        
+        # 4. Query the latest log since the cutoff
+        from .models import StaffLog
+        latest_log = StaffLog.objects.filter(
+            staff=member, 
+            timestamp__gte=cutoff_utc
+        ).order_by('timestamp').last()
+        
+        if latest_log:
+            return latest_log.action == 'login'
+            
+        return False
+
+    @classmethod
+    def serialize_staff(cls, member: Staff) -> dict:
         """
         Transforms a database Staff model record to a React-friendly dictionary format.
         """
         if not member:
             return {}
+
+        from zoneinfo import ZoneInfo
+        ist_tz = ZoneInfo('Asia/Kolkata')
+        created_at_ist = member.created_at.astimezone(ist_tz) if member.created_at else None
+        updated_at_ist = member.updated_at.astimezone(ist_tz) if member.updated_at else None
+
         return {
             "id": member.id,
             "uniqueCode": member.uniqueCode,
@@ -35,7 +89,7 @@ class StaffService:
             "emergencyPhone": f"{member.emergencyCountry} {member.emergencyNo}",
             "shiftId": member.shift_id,
             "status": member.status,
-            "isCheckedIn": member.isCheckedIn,
+            "isCheckedIn": cls.is_staff_on_duty(member),
             "address": member.address,
             "govtProofType": member.govtProofType,
             "govtProofId": member.govtProofId,
@@ -43,26 +97,9 @@ class StaffService:
             "govtProofFileUrl": member.govtProofFileUrl or "",
             "profileFileName": member.profileFileName or "",
             "profileFileUrl": member.profileFileUrl or "",
-            "joined": member.created_at.strftime("%b %Y") if member.created_at else "",
-            "logs": [
-                { "id": 101, "date": 'May 22, 2026', "checkIn": '08:30 AM', "checkOut": '06:00 PM', "duration": '9h 30m' },
-                { "id": 102, "date": 'May 21, 2026', "checkIn": '08:45 AM', "checkOut": '05:45 PM', "duration": '9h 00m' }
-            ] if member.id == 'STF-01' else [
-                { "id": 201, "date": 'May 22, 2026', "checkIn": '09:00 AM', "checkOut": '05:00 PM', "duration": '8h 00m' },
-                { "id": 202, "date": 'May 21, 2026', "checkIn": '08:50 AM', "checkOut": '05:10 PM', "duration": '8h 20m' }
-            ] if member.id == 'STF-02' else [
-                { "id": 301, "date": 'May 22, 2026', "checkIn": '10:00 AM', "checkOut": '06:00 PM', "duration": '8h 00m' }
-            ] if member.id == 'STF-03' else [
-                { "id": 401, "date": 'May 22, 2026', "checkIn": '08:00 AM', "checkOut": '04:00 PM', "duration": '8h 00m' }
-            ] if member.id == 'STF-04' else [
-                { "id": 501, "date": 'May 15, 2026', "checkIn": '08:30 AM', "checkOut": '05:30 PM', "duration": '9h 00m' }
-            ] if member.id == 'STF-05' else [
-                { "id": 601, "date": 'May 22, 2026', "checkIn": '11:00 AM', "checkOut": '08:00 PM', "duration": '9h 00m' }
-            ] if member.id == 'STF-06' else [
-                { "id": 701, "date": 'May 22, 2026', "checkIn": '09:00 AM', "checkOut": '05:00 PM', "duration": '8h 00m' }
-            ],
-            "created_at": member.created_at.isoformat() if member.created_at else None,
-            "updated_at": member.updated_at.isoformat() if member.updated_at else None
+            "joined": created_at_ist.strftime("%b %Y") if created_at_ist else "",
+            "created_at": created_at_ist.isoformat() if created_at_ist else None,
+            "updated_at": updated_at_ist.isoformat() if updated_at_ist else None
         }
 
     @classmethod
@@ -103,16 +140,9 @@ class StaffService:
             if shift_id and shift_id != 'all':
                 queryset = queryset.filter(shift_id=shift_id.strip())
 
-            # 5. Duty Status (isCheckedIn)
-            duty = filters.get('duty')
-            if duty and duty != 'all':
-                if duty == 'on-duty':
-                    queryset = queryset.filter(isCheckedIn=True)
-                elif duty == 'offline':
-                    queryset = queryset.filter(isCheckedIn=False)
-
         staff_list = [cls.serialize_staff(member) for member in queryset]
 
+        # Calculate stats on the full matching list
         total = len(staff_list)
         active_duty = sum(1 for m in staff_list if m.get("isCheckedIn"))
         on_leave = sum(1 for m in staff_list if m.get("status") == "on-leave")
@@ -131,6 +161,15 @@ class StaffService:
             "onLeave": on_leave,
             "frontOffice": front_office
         }
+
+        # Apply duty filter post-serialization (since isCheckedIn is computed dynamically)
+        if filters:
+            duty = filters.get('duty')
+            if duty and duty != 'all':
+                if duty == 'on-duty':
+                    staff_list = [m for m in staff_list if m.get("isCheckedIn")]
+                elif duty == 'offline':
+                    staff_list = [m for m in staff_list if not m.get("isCheckedIn")]
 
         return {
             "staff": staff_list,
@@ -224,7 +263,7 @@ class StaffService:
             uniqueCode=unique_code,
             name=data.get('name', '').strip(),
             dept=data.get('dept', '').strip(),
-            password=data.get('password', '').strip() if data.get('password') else None,
+            password=make_password(data.get('password', '').strip()) if data.get('password') else None,
             email=data.get('email', '').strip() if data.get('email') else None,
             phoneCountry=data.get('phoneCountry', '+971').strip(),
             phoneNo=data.get('phoneNo', '').strip(),
@@ -264,7 +303,7 @@ class StaffService:
         if 'dept' in data:
             member.dept = data['dept'].strip()
         if 'password' in data:
-            member.password = data['password'].strip() if data['password'] else None
+            member.password = make_password(data['password'].strip()) if data['password'] else None
         if 'email' in data:
             member.email = data['email'].strip() if data['email'] else None
         if 'phoneCountry' in data:
@@ -499,7 +538,7 @@ class StaffService:
                 uniqueCode=s_data["uniqueCode"],
                 name=s_data["name"],
                 dept=s_data["dept"],
-                password=s_data.get("password"),
+                password=make_password(s_data.get("password")) if s_data.get("password") else None,
                 email=s_data.get("email"),
                 phoneCountry=s_data["phoneCountry"],
                 phoneNo=s_data["phoneNo"],

@@ -27,3 +27,10 @@ export const updateStaff = (staffId, staffData) => {
 export const deleteStaff = (staffId) => {
   return axiosInstance.delete(`/staff/${staffId}/`);
 };
+
+/**
+ * Fetches staff attendance/session login/logout logs.
+ */
+export const getStaffLogs = (params = {}) => {
+  return axiosInstance.get('/staff/logs/', { params });
+};

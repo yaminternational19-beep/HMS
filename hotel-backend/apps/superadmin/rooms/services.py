@@ -1,4 +1,5 @@
 import os
+from zoneinfo import ZoneInfo
 from django.db.models import Q
 from core.services.upload_service import UploadService
 from .models import Rooms
@@ -39,7 +40,7 @@ class RoomService:
             "lastCleaned": room.last_cleaned,
             "status_updated_by_role": room.status_updated_by_role,
             "status_updated_by_id": room.status_updated_by_id,
-            "created_at": room.created_at.isoformat() if room.created_at else None,
+            "created_at": room.created_at.astimezone(ZoneInfo('Asia/Kolkata')).isoformat() if room.created_at else None,
         }
 
     @classmethod

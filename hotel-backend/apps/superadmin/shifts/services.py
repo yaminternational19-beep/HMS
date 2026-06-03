@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from django.db.models import Q
 from .models import Shifts
 
@@ -15,14 +16,19 @@ class ShiftService:
         """
         if not shift:
             return {}
+        
+        ist_tz = ZoneInfo('Asia/Kolkata')
+        created_at_ist = shift.created_at.astimezone(ist_tz) if shift.created_at else None
+        updated_at_ist = shift.updated_at.astimezone(ist_tz) if shift.updated_at else None
+
         return {
             "id": shift.id,
             "name": shift.name,
             "time": shift.time,
             "icon": shift.icon,
             "color": shift.color,
-            "created_at": shift.created_at.isoformat() if shift.created_at else None,
-            "updated_at": shift.updated_at.isoformat() if shift.updated_at else None
+            "created_at": created_at_ist.isoformat() if created_at_ist else None,
+            "updated_at": updated_at_ist.isoformat() if updated_at_ist else None
         }
 
     @classmethod

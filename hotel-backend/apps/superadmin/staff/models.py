@@ -46,3 +46,16 @@ class Staff(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.id}) - {self.dept}"
+
+
+class StaffLog(models.Model):
+    id = models.AutoField(primary_key=True)
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='logs')
+    action = models.CharField(max_length=50) # 'login' or 'logout'
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'StaffLog'
+
+    def __str__(self):
+        return f"{self.staff.name} - {self.action} @ {self.timestamp}"

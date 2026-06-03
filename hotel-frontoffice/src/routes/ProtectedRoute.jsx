@@ -1,14 +1,12 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { getCookie } from '../api/cookieHelper';
 
 /**
- * ProtectedRoute — wraps routes that require authentication.
- * Replace the `isAuthenticated` logic with your actual auth check (context, zustand, etc).
+ * ProtectedRoute — wraps routes that require employee authentication.
  */
 const ProtectedRoute = () => {
-  // Enforce auth check via localStorage. Default to true if null so the user is logged in by default.
-  const authState = localStorage.getItem('isAuthenticated');
-  const isAuthenticated = authState !== 'false';
+  const isAuthenticated = !!getCookie('employeeToken');
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

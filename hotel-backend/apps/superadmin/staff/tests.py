@@ -85,6 +85,24 @@ class StaffModelAndValidationTestCase(TestCase):
         
         self.assertIn("email", context.exception.detail)
 
+    def test_validators_non_operational_role_cannot_have_password(self):
+        # Corporate Director is non-operational and cannot have a password
+        data = {
+            "name": "Alex Carter",
+            "dept": "Corporate Director",
+            "password": "SecurePassword123",
+            "phoneNo": "50 111 2222",
+            "emergencyNo": "50 333 4444",
+            "shift_id": "SHF-04",
+            "address": "Dubai, UAE",
+            "govtProofId": "P992019"
+        }
+        from rest_framework.exceptions import ValidationError
+        with self.assertRaises(ValidationError) as context:
+            StaffValidator.validate_onboard_data(data)
+        
+        self.assertIn("password", context.exception.detail)
+
     def test_service_sequential_id_generator(self):
         # First staff should be STF-01
         self.assertEqual(StaffService.generate_next_staff_id(), 'STF-01')

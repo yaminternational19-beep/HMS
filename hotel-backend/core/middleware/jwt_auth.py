@@ -76,3 +76,53 @@ def superadmin_required(view_func):
     return wrapped_view
 
 
+from apps.superadmin.staff.models import Staff
+
+class StaffJWTAuthenticationMiddleware(MiddlewareMixin):
+    """
+    Middleware that authenticates front-office staff/employees using JWT in the Authorization header.
+    Attaches the authenticated Staff object to request.employee.
+    """
+    def process_request(self, request):
+        request.employee = None
+        
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return
+            
+        parts = auth_header.split()
+        if len(parts) != 2 or parts[0].lower() != 'bearer':
+            return
+            
+        token = parts[1]
+        try:
+            payload = JWTService.decode_token(token)
+            employee_id = payload.get('employee_id')
+            if employee_id:
+                try:
+                    staff_member = Staff.objects.get(id=employee_id, status='active')
+                    request.employee = staff_member
+                except Staff.DoesNotExist:
+                    pass
+        except ValueError:
+            # Token is invalid or expired
+            pass
+
+
+def employee_required(view_func):
+    """
+    Decorator that ensures a valid employee/staff JWT is present.
+    """
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        if not getattr(request, 'employee', None):
+            return error_response(
+                message="Unauthorized. Valid employee/staff JWT token is required.",
+                errors={"auth": "Missing or invalid token"},
+                status_code=StatusCodes.UNAUTHORIZED
+            )
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
+
+

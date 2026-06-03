@@ -11,7 +11,8 @@ import {
   LogOut,
   ShieldAlert,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Activity
 } from 'lucide-react';
 
 const navLinks = [
@@ -19,6 +20,7 @@ const navLinks = [
   { label: 'Rooms Management', path: '/rooms', icon: <Bed size={20} /> },
   { label: 'Shift Management', path: '/shifts', icon: <Clock size={20} /> },
   { label: 'Staff Management', path: '/staff', icon: <Users size={20} /> },
+  { label: 'Staff Logs', path: '/staff-logs', icon: <Activity size={20} /> },
   { label: 'Bookings', path: '/bookings', icon: <CalendarRange size={20} /> },
   { label: 'Reports & Stats', path: '/reports', icon: <BarChart3 size={20} /> },
 ];
@@ -33,7 +35,7 @@ const Sidebar = () => {
     navigate('/login');
   };
 
-  const userEmail = getCookie('adminUserEmail') || 'admin@blackcube.ae';
+  const userEmail = getCookie('adminUserEmail') || 'praveen.reddy@blackcube.ae';
   const userInitials = userEmail.split('@')[0].substring(0, 2).toUpperCase();
 
   return (

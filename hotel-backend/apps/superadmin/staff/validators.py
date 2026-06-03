@@ -25,7 +25,7 @@ class StaffValidator:
         if not role_check and current_instance:
             role_check = current_instance.dept.lower()
             
-        if 'front' in role_check or 'maintain' in role_check:
+        if 'front' in role_check or 'maintain' in role_check or 'concierge' in role_check or 'clerk' in role_check or 'desk' in role_check:
             is_operational = True
             
         password = data.get('password', '')
@@ -34,6 +34,9 @@ class StaffValidator:
                 errors['password'] = "HMS Operation Password is required for Front Office and Maintenance roles."
             elif password and len(password) < 4:
                 errors['password'] = "HMS Operation Password must be at least 4 characters long."
+        else:
+            if password:
+                errors['password'] = "HMS Operation Password is only allowed for Front Office and Maintenance roles."
                 
         # 4. Optional Email Address format
         email = data.get('email', '')

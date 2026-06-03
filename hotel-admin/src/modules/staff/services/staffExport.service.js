@@ -61,7 +61,7 @@ export const exportToExcel = (data = [], addToast = () => {}) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `hms_staff_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute('download', `hms_staff_${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}.csv`);
   
   // Append to document and trigger click
   document.body.appendChild(link);
@@ -98,7 +98,7 @@ export const exportToPDF = (data = [], addToast = () => {}) => {
     doc.setFontSize(10);
     doc.setTextColor(0);
     doc.text('Staff Directory Ledger Report', 140, 22, { align: 'right' });
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 140, 28, { align: 'right' });
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`, 140, 28, { align: 'right' });
     
     // Table Headers
     const headers = [['Staff ID', 'Staff Code', 'Full Name', 'Role / Dept', 'Contact Phone', 'Shift ID', 'Status', 'Joined']];
@@ -152,7 +152,7 @@ export const exportToPDF = (data = [], addToast = () => {}) => {
       );
     }
 
-    doc.save(`hms_staff_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`hms_staff_${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}.pdf`);
     addToast('PDF downloaded successfully!', 'success');
   } catch (error) {
     console.error('PDF Generation Error:', error);

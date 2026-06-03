@@ -60,7 +60,7 @@ export const exportToExcel = (data = []) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `hms_bookings_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute('download', `hms_bookings_${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}.csv`);
   
   // Append to document and trigger click
   document.body.appendChild(link);
@@ -98,7 +98,7 @@ export const exportToPDF = (data = []) => {
     doc.setFontSize(10);
     doc.setTextColor(0);
     doc.text('Bookings Directory Report', 140, 22, { align: 'right' });
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 140, 28, { align: 'right' });
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`, 140, 28, { align: 'right' });
     
     // Table Headers
     const headers = [['Booking ID', 'Guest Name', 'Phone', 'Room', 'Room Type', 'Check-In', 'Check-Out', 'Guests', 'Status', 'Amount']];
@@ -153,7 +153,7 @@ export const exportToPDF = (data = []) => {
       );
     }
 
-    doc.save(`hms_bookings_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`hms_bookings_${new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}.pdf`);
     addToast('PDF downloaded successfully!', 'success');
   } catch (error) {
     console.error('PDF Generation Error:', error);

@@ -5,7 +5,7 @@ from core.services.statuscodes import StatusCodes
 from core.middleware.jwt_auth import superadmin_required
 from .services import StaffService
 from .serializers import StaffSerializer
-from .models import Staff
+from .models import Staff, StaffLog
 
 
 # =====================================================================
@@ -207,3 +207,62 @@ def staff_detail_update_delete(request, staff_id):
         return update_staff_agent(request, staff_id)
     elif request.method == 'DELETE':
         return delete_staff_agent(request, staff_id)
+
+
+# =====================================================================
+# SUPER ADMIN ONLY: GET All Staff Login/Logout Logs
+# =====================================================================
+@api_view(['GET'])
+@superadmin_required
+def staff_logs_view(request):
+    """
+    Retrieves the complete list of staff attendance/login/logout events.
+    Supports filtering by staff ID, month, and year.
+    Restricted strictly to Super Admins.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        ist_tz = ZoneInfo('Asia/Kolkata')
+        
+        queryset = StaffLog.objects.all().order_by('-timestamp')
+        
+        staff_id = request.GET.get('staffId') or request.GET.get('staff_id')
+        if staff_id and staff_id != 'all':
+            queryset = queryset.filter(staff_id=staff_id.strip())
+            
+        month = request.GET.get('month')
+        year = request.GET.get('year')
+            
+        logs_data = []
+        for log in queryset:
+            # Convert UTC timestamp to IST timezone
+            ist_timestamp = log.timestamp.astimezone(ist_tz)
+            
+            # Filter by month and year in IST timezone
+            if month and month != 'all' and ist_timestamp.month != int(month):
+                continue
+            if year and year != 'all' and ist_timestamp.year != int(year):
+                continue
+                
+            logs_data.append({
+                "id": log.id,
+                "staffId": log.staff.id,
+                "staffName": log.staff.name,
+                "role": log.staff.dept,
+                "action": log.action,
+                "timestamp": ist_timestamp.isoformat(),
+                "date": ist_timestamp.strftime("%Y-%m-%d"),
+                "time": ist_timestamp.strftime("%I:%M:%S %p")
+            })
+            
+        return success_response(
+            message="Staff logs fetched successfully",
+            data={"logs": logs_data},
+            status_code=StatusCodes.OK
+        )
+    except Exception as e:
+        return error_response(
+            message="Failed to fetch staff logs.",
+            errors={"server": str(e)},
+            status_code=StatusCodes.INTERNAL_SERVER_ERROR
+        )
