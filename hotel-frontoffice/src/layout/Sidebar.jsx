@@ -74,16 +74,16 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation - scrollable list */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto scrollbar-thin">
         {navLinks.map((link) => (
           <NavLink
             key={link.path}
             to={link.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+              `flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200
                ${isActive
-                ? 'bg-white/20 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-accent text-white shadow-lg shadow-accent/20 scale-[1.02]'
+                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
               }`
             }
           >

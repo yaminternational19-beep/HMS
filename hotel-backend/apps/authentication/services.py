@@ -101,6 +101,15 @@ class StaffAuthService:
         if not check_password(password.strip(), member.password):
             return None, "Password is wrong"
 
+        # 5. Verify current time is within shift login window
+        if member.shift and member.shift.time:
+            from zoneinfo import ZoneInfo
+            from datetime import datetime
+            ist_tz = ZoneInfo('Asia/Kolkata')
+            current_dt = datetime.now(ist_tz)
+            if not JWTService.is_within_shift_login_window(member.shift.time, current_dt):
+                return None, f"Login denied. You can only log in during your assigned shift: {member.shift.name} ({member.shift.time}) plus a 2-hour grace period."
+
         # Generate JWT Token payload (separate employee payload)
         token_payload = {
             "employee_id": member.id,

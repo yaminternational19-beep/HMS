@@ -216,51 +216,164 @@ def staff_detail_update_delete(request, staff_id):
 @superadmin_required
 def staff_logs_view(request):
     """
-    Retrieves the complete list of staff attendance/login/logout events.
-    Supports filtering by staff ID, month, and year.
-    Restricted strictly to Super Admins.
+    Retrieves a paginated list of staff login/logout logs or daily summary groupings.
+    Supports filtering by period, staff ID, month, and year. Includes dynamic stats.
     """
     try:
         from zoneinfo import ZoneInfo
+        from datetime import datetime, timedelta
+        from core.services.pagination import DefaultPagination
+        
         ist_tz = ZoneInfo('Asia/Kolkata')
+        now_ist = datetime.now(ist_tz)
+        today_date = now_ist.date()
+        tomorrow_date = today_date + timedelta(days=1)
         
         queryset = StaffLog.objects.all().order_by('-timestamp')
         
+        # 1. Filter by Staff ID
         staff_id = request.GET.get('staffId') or request.GET.get('staff_id')
         if staff_id and staff_id != 'all':
             queryset = queryset.filter(staff_id=staff_id.strip())
             
+        # 2. Filter by Period / Custom Month & Year
+        period = request.GET.get('period', 'today')
         month = request.GET.get('month')
         year = request.GET.get('year')
-            
-        logs_data = []
+        
+        filtered_logs = []
         for log in queryset:
-            # Convert UTC timestamp to IST timezone
             ist_timestamp = log.timestamp.astimezone(ist_tz)
+            log_date = ist_timestamp.date()
             
-            # Filter by month and year in IST timezone
-            if month and month != 'all' and ist_timestamp.month != int(month):
-                continue
-            if year and year != 'all' and ist_timestamp.year != int(year):
-                continue
+            if period == 'today':
+                if log_date != today_date:
+                    continue
+            elif period == 'tomorrow':
+                if log_date != tomorrow_date:
+                    continue
+            elif period == 'week':
+                diff_days = (today_date - log_date).days
+                if not (-1 <= diff_days <= 7):
+                    continue
+            elif period == 'month':
+                if ist_timestamp.year != today_date.year or ist_timestamp.month != today_date.month:
+                    continue
+            elif period == 'year':
+                if ist_timestamp.year != today_date.year:
+                    continue
+            elif period == 'all':
+                if month and month != 'all' and ist_timestamp.month != int(month):
+                    continue
+                if year and year != 'all' and ist_timestamp.year != int(year):
+                    continue
+            
+            filtered_logs.append(log)
+            
+        # 3. Calculate Stats based on all filtered logs
+        total_logins = sum(1 for log in filtered_logs if log.action == 'login')
+        total_logouts = sum(1 for log in filtered_logs if log.action == 'logout')
+        total_activities = len(filtered_logs)
+        
+        stats = {
+            "totalLogins": total_logins,
+            "totalLogouts": total_logouts,
+            "totalActivities": total_activities
+        }
+        
+        # 4. Check active Tab
+        tab = request.GET.get('tab', 'chronological')
+        paginator = DefaultPagination()
+        
+        if tab == 'dailySummary':
+            # Aggregate Daily Summaries
+            summary_map = {}
+            for log in filtered_logs:
+                ist_timestamp = log.timestamp.astimezone(ist_tz)
+                log_date_str = ist_timestamp.strftime("%Y-%m-%d")
+                key = f"{log_date_str}_{log.staff.id}"
                 
-            logs_data.append({
-                "id": log.id,
-                "staffId": log.staff.id,
-                "staffName": log.staff.name,
-                "role": log.staff.dept,
-                "action": log.action,
-                "timestamp": ist_timestamp.isoformat(),
-                "date": ist_timestamp.strftime("%Y-%m-%d"),
-                "time": ist_timestamp.strftime("%I:%M:%S %p")
-            })
+                if key not in summary_map:
+                    summary_map[key] = {
+                        "date": log_date_str,
+                        "staffId": log.staff.id,
+                        "staffCode": log.staff.uniqueCode,
+                        "staffName": log.staff.name,
+                        "role": log.staff.dept,
+                        "shiftName": log.staff.shift.name,
+                        "shiftTime": log.staff.shift.time,
+                        "logins": 0,
+                        "logouts": 0
+                    }
+                    
+                if log.action == 'login':
+                    summary_map[key]["logins"] += 1
+                elif log.action == 'logout':
+                    summary_map[key]["logouts"] += 1
             
-        return success_response(
-            message="Staff logs fetched successfully",
-            data={"logs": logs_data},
-            status_code=StatusCodes.OK
-        )
+            daily_summary_list = list(summary_map.values())
+            # Stable sort: first by staffId ascending, then by date descending
+            daily_summary_list.sort(key=lambda x: x["staffId"])
+            daily_summary_list.sort(key=lambda x: x["date"], reverse=True)
+            
+            paginated_data = paginator.paginate_queryset(daily_summary_list, request)
+            
+            return success_response(
+                message="Staff daily summaries fetched successfully",
+                data={
+                    "dailySummaries": paginated_data,
+                    "pagination": {
+                        "totalItems": paginator.page.paginator.count,
+                        "totalPages": paginator.page.paginator.num_pages,
+                        "currentPage": paginator.page.number,
+                        "itemsPerPage": paginator.page_size,
+                        "hasNext": paginator.page.has_next()
+                    },
+                    "stats": stats
+                },
+                status_code=StatusCodes.OK
+            )
+            
+        else:
+            # Chronological Logs
+            paginated_logs = paginator.paginate_queryset(filtered_logs, request)
+            
+            logs_data = []
+            for log in paginated_logs:
+                ist_timestamp = log.timestamp.astimezone(ist_tz)
+                logs_data.append({
+                    "id": log.id,
+                    "staffId": log.staff.id,
+                    "staffCode": log.staff.uniqueCode,
+                    "staffName": log.staff.name,
+                    "role": log.staff.dept,
+                    "shiftName": log.staff.shift.name,
+                    "shiftTime": log.staff.shift.time,
+                    "action": log.action,
+                    "timestamp": ist_timestamp.isoformat(),
+                    "date": ist_timestamp.strftime("%Y-%m-%d"),
+                    "time": ist_timestamp.strftime("%I:%M:%S %p")
+                })
+                
+            return success_response(
+                message="Staff logs fetched successfully",
+                data={
+                    "logs": logs_data,
+                    "pagination": {
+                        "totalItems": paginator.page.paginator.count,
+                        "totalPages": paginator.page.paginator.num_pages,
+                        "currentPage": paginator.page.number,
+                        "itemsPerPage": paginator.page_size,
+                        "hasNext": paginator.page.has_next()
+                    },
+                    "stats": stats
+                },
+                status_code=StatusCodes.OK
+            )
+            
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return error_response(
             message="Failed to fetch staff logs.",
             errors={"server": str(e)},

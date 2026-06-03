@@ -46,6 +46,11 @@ class AuthAPITestCase(TestCase):
         # 3. Seed initial staff (will hash passwords using make_password internally)
         StaffService.seed_initial_staff()
 
+        # Override shift times to cover 24 hours to ensure test cases always pass regardless of the execution hour
+        for shift in Shifts.objects.all():
+            shift.time = "12:00 AM - 11:59 PM"
+            shift.save()
+
     def test_superadmin_login_success(self):
         url = reverse('superadmin_login')
         payload = {
@@ -101,3 +106,35 @@ class AuthAPITestCase(TestCase):
         # Should return unauthorized/forbidden access because of role restriction
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn("Only Front Office and Maintenance", response.data["message"])
+
+    def test_staff_login_denied_outside_shift_window(self):
+        from zoneinfo import ZoneInfo
+        from datetime import datetime, timedelta
+        
+        ist_tz = ZoneInfo('Asia/Kolkata')
+        now_ist = datetime.now(ist_tz)
+        
+        # Define a past, inactive shift window
+        start_time_str = (now_ist - timedelta(hours=5)).strftime("%I:%M %p")
+        end_time_str = (now_ist - timedelta(hours=4)).strftime("%I:%M %p")
+        
+        inactive_shift = Shifts.objects.create(
+            id="SHF-TEST-INACTIVE",
+            name="Inactive Shift",
+            time=f"{start_time_str} - {end_time_str}",
+            icon="clock",
+            color="red"
+        )
+        
+        sarah = Staff.objects.get(id="STF-02")
+        sarah.shift = inactive_shift
+        sarah.save()
+        
+        url = reverse('staff_login')
+        payload = {
+            "staffCode": "STF-02",
+            "password": "SarahHMS2026"
+        }
+        response = self.client.post(url, data=payload, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("Login denied", response.data["message"])

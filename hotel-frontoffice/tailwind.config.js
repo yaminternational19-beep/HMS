@@ -17,7 +17,7 @@ export default {
         // You can add enterprise theme colors here
         primary: 'var(--color-primary, #0f172a)',
         secondary: 'var(--color-secondary, #334155)',
-        accent: 'var(--color-accent, #3b82f6)',
+        accent: 'var(--color-accent, #ca8a04)',
         'text-main': 'var(--color-text-main, #1e293b)',
         'text-muted': 'var(--color-text-muted, #64748b)',
         'bg-main': 'var(--color-bg-main, #f8fafc)',

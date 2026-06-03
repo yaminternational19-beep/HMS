@@ -98,9 +98,21 @@ class StaffJWTAuthenticationMiddleware(MiddlewareMixin):
         try:
             payload = JWTService.decode_token(token)
             employee_id = payload.get('employee_id')
+            iat = payload.get('iat')
             if employee_id:
                 try:
                     staff_member = Staff.objects.get(id=employee_id, status='active')
+                    
+                    # Verify if the token is still valid for the employee's shift
+                    from zoneinfo import ZoneInfo
+                    from datetime import datetime
+                    ist_tz = ZoneInfo('Asia/Kolkata')
+                    current_dt = datetime.now(ist_tz)
+                    
+                    if staff_member.shift and staff_member.shift.time:
+                        if not JWTService.is_token_valid_for_shift(staff_member.shift.time, iat, current_dt):
+                            raise ValueError("Session token has expired for this shift.")
+                    
                     request.employee = staff_member
                 except Staff.DoesNotExist:
                     pass
