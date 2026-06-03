@@ -49,7 +49,7 @@ const Sidebar = () => {
           <div className="flex items-center gap-2">
             <ShieldAlert size={24} className="text-accent animate-pulse" />
             <div className="flex flex-col">
-              <span className="font-bold text-base tracking-wide leading-none">Hotel Admin</span>
+              <span className="font-bold text-base tracking-wide leading-none">SNOWLINE BLOOM Admin</span>
               <span className="text-[10px] text-accent/80 tracking-widest font-semibold mt-0.5 uppercase">Enterprise</span>
             </div>
           </div>

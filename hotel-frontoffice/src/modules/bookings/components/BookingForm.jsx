@@ -368,7 +368,7 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Hotel Guest Registration Portal</h3>
+            <h3 className="text-lg font-bold text-slate-900">SNOWLINE BLOOM Guest Registration Portal</h3>
             <p className="text-xs text-slate-500 mt-0.5">Complete steps to register guests and assign reservation details.</p>
           </div>
           <ActionButton

@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="w-full border-t border-slate-200 bg-white px-8 py-4 shrink-0 shadow-inner">
       <div className="flex-between flex-wrap gap-2 text-xs text-slate-400 font-medium">
-        <span>&copy; {year} Hotel Operations Administrator Portal. Confidential.</span>
+        <span>&copy; {year} SNOWLINE BLOOM Operations Administrator Portal. Confidential.</span>
         <span>
           Maintained by{' '}
           <a

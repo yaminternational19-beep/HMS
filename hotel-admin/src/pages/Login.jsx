@@ -106,7 +106,7 @@ const Login = () => {
             <ShieldAlert size={30} className="text-accent" />
           </div>
           <div className="space-y-1 mt-1">
-            <h2 className="text-2xl font-bold tracking-tight text-primary">Hotel Admin Panel</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-primary">SNOWLINE BLOOM Admin Panel</h2>
             <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Enterprise Management Suite</p>
           </div>
         </div>

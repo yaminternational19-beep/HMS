@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="w-full border-t border-slate-200 bg-white px-6 py-4">
       <div className="flex-between flex-wrap gap-2 text-sm text-text-muted">
-        <span>&copy; {year} Hotel Front Office. All rights reserved.</span>
+        <span>&copy; {year} SNOWLINE BLOOM Front Office. All rights reserved.</span>
         <span>
           Designed &amp; Developed by{' '}
           <a

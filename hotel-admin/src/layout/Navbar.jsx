@@ -12,7 +12,7 @@ const routeTitleMap = {
 
 const Navbar = () => {
   const location = useLocation();
-  const currentTitle = routeTitleMap[location.pathname] || 'Hotel Administration';
+  const currentTitle = routeTitleMap[location.pathname] || 'SNOWLINE BLOOM Administration';
 
   return (
     <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-20">

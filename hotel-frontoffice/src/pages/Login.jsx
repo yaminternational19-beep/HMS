@@ -55,7 +55,7 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@hotel.com"
+                placeholder="name@snowlinebloom.com"
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm text-text-main focus:border-accent outline-none bg-slate-50 transition-colors"
               />
             </div>

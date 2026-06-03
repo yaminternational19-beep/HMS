@@ -16,11 +16,11 @@ export const downloadInvoicePDF = (invoice) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('HOTEL INVOICE', 14, 16);
+  doc.text('SNOWLINE BLOOM INVOICE', 14, 16);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('FrontOffice HMS — Premium Hotel Management', 14, 24);
+  doc.text('FrontOffice HMS — Premium SNOWLINE BLOOM Management', 14, 24);
 
   // Invoice ID + Status on right
   doc.setFontSize(11);
@@ -128,7 +128,7 @@ export const downloadInvoicePDF = (invoice) => {
   doc.setTextColor(150, 150, 150);
   doc.setFont('helvetica', 'italic');
   doc.text('Thank you for staying with us. We hope to see you again!', pageWidth / 2, footerY + 7, { align: 'center' });
-  doc.text('FrontOffice HMS | hotel@example.com | +91 98765-00000', pageWidth / 2, footerY + 13, { align: 'center' });
+  doc.text('FrontOffice HMS | snowlinebloom@example.com | +91 98765-00000', pageWidth / 2, footerY + 13, { align: 'center' });
 
   // ─── SAVE ─────────────────────────────────────────────────────────
   doc.save(`${invoice.id}_${invoice.guestName.replace(/\s+/g, '_')}.pdf`);

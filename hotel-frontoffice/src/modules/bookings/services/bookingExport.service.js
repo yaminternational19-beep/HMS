@@ -93,7 +93,7 @@ export const exportToPDF = (data = []) => {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100);
-    doc.text('Enterprise Hotel Management System Dashboard', 14, 30);
+    doc.text('Enterprise SNOWLINE BLOOM Management System Dashboard', 14, 30);
     
     doc.setFontSize(10);
     doc.setTextColor(0);
