@@ -146,7 +146,8 @@ class StaffAPITestCase(TestCase):
         # 2. Issue a JWT Token
         self.token = JWTService.generate_token(payload={
             "user_id": self.superadmin.id,
-            "role": "superadmin"
+            "role": "superadmin",
+            "aud": "hotel-admin"
         })
         self.headers = {
             "HTTP_AUTHORIZATION": f"Bearer {self.token}"

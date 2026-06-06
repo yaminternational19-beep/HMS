@@ -41,7 +41,8 @@ class SuperAdminAuthService:
         token_payload = {
             "user_id": user.id,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "aud": "hotel-admin"
         }
         token = JWTService.generate_token(token_payload)
 
@@ -115,7 +116,8 @@ class StaffAuthService:
             "employee_id": member.id,
             "unique_code": member.uniqueCode,
             "email": member.email,
-            "role": member.dept
+            "role": member.dept,
+            "aud": "hotel-frontoffice"
         }
         token = JWTService.generate_token(token_payload)
 

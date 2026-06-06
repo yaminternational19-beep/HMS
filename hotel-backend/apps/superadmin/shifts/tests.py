@@ -134,7 +134,8 @@ class ShiftsAPITestCase(TestCase):
         token_payload = {
             "user_id": self.super_admin.id,
             "email": self.super_admin.email,
-            "role": self.super_admin.role
+            "role": self.super_admin.role,
+            "aud": "hotel-admin"
         }
         self.token = JWTService.generate_token(token_payload)
         self.auth_headers = {"HTTP_AUTHORIZATION": f"Bearer {self.token}"}
@@ -149,7 +150,8 @@ class ShiftsAPITestCase(TestCase):
         self.staff_token = JWTService.generate_token({
             "user_id": self.staff_user.id,
             "email": self.staff_user.email,
-            "role": self.staff_user.role
+            "role": self.staff_user.role,
+            "aud": "hotel-admin"
         })
         self.staff_headers = {"HTTP_AUTHORIZATION": f"Bearer {self.staff_token}"}
 

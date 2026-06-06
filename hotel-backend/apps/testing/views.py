@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, throttle_classes
 from core.response.api_response import success_response,error_response
 from django.db import connection
 
@@ -40,3 +40,22 @@ def mysql_check(request):
             message=str(e),
             data={}
         )
+
+
+@api_view(['GET'])
+def custom_limit_check(request):
+    return success_response(
+        message="custom limit testing",
+        data={}
+    )
+custom_limit_check.throttle_scope = 'hms_custom'
+
+
+@api_view(['GET'])
+@throttle_classes([])
+def exempt_check(request):
+    return success_response(
+        message="exempt testing",
+        data={}
+    )
+

@@ -40,10 +40,10 @@ if ENV_PATH.exists():
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2w(javllz(140!071uct70$+@#!fks180^cw%qv)d-ksg+cc(@'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-2w(javllz(140!071uct70$+@#!fks180^cw%qv)d-ksg+cc(@')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ['true', '1', 'yes']
 
 ALLOWED_HOSTS = ["*"]
 
@@ -52,26 +52,30 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'apps.testing',
     'apps.authentication',
     'apps.superadmin.rooms',
     'apps.superadmin.shifts',
     'apps.superadmin.staff',
-    'apps.frontoffice.booking',
+    # 'apps.frontoffice.booking',
     'core',
 ]
 
 MIDDLEWARE = [
-    'core.middleware.cors.CORSMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.request_log.RequestLogMiddleware',
     'core.middleware.jwt_auth.JWTAuthenticationMiddleware',
-    'core.middleware.jwt_auth.StaffJWTAuthenticationMiddleware',
+    'core.middleware.exception_handler.APIExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -95,22 +99,14 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hms_db',
-        'USER': 'root',
-        'PASSWORD': '5612',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.environ.get('DB_NAME', 'hms_db'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 
@@ -150,6 +146,41 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Cache Configuration for Rate Limiting (using local memory cache)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'hms-rate-limit-cache',
+    }
+}
+
+# Rate Limiting Configuration
+RATE_LIMIT_DEFAULT = os.environ.get('RATE_LIMIT_DEFAULT', '60/m')
+
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'True').lower() in ['true', '1', 'yes']
+if not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()
+    ]
+
+# CSRF and Session Security Configuration
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() in ['true', '1', 'yes']
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ['true', '1', 'yes']
+CSRF_COOKIE_HTTPONLY = os.environ.get('CSRF_COOKIE_HTTPONLY', 'False').lower() in ['true', '1', 'yes']
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+]
+
+# CSRF custom failure handler
+CSRF_FAILURE_VIEW = 'core.utils.exception_handler.csrf_failure'
+
+# Security Headers Configuration
+SECURE_BROWSER_XSS_FILTER = os.environ.get('SECURE_BROWSER_XSS_FILTER', 'True').lower() in ['true', '1', 'yes']
+SECURE_CONTENT_TYPE_NOSNIFF = os.environ.get('SECURE_CONTENT_TYPE_NOSNIFF', 'True').lower() in ['true', '1', 'yes']
+X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
+
 # Django REST Framework Configuration
 # Disables default authentication/user dependencies to support pure custom JWT auth without django.contrib.auth
 REST_FRAMEWORK = {
@@ -157,10 +188,59 @@ REST_FRAMEWORK = {
     'UNAUTHENTICATED_TOKEN': None,
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'core.services.throttles.HMSRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'hms_default': os.environ.get('RATE_LIMIT_DEFAULT', '60/m'),
+        'hms_login': '5/m',
+        'hms_custom': '3/m',
+    },
+    'EXCEPTION_HANDLER': 'core.utils.exception_handler.custom_exception_handler',
 }
 
 # Media files configuration (File uploads management)
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = BASE_DIR / 'uploads'
+
+# Static files storage configuration (WhiteNoise compression)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# Production Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} - {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'hms': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
 
 
