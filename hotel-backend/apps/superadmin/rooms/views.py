@@ -93,6 +93,7 @@ def create_room_record(request):
 # =====================================================================
 @api_view(['GET', 'POST'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
+@jwt_required
 def room_list_create(request):
     """
     Routes GET requests to general staff room listing (guarded by general auth),
@@ -202,6 +203,7 @@ def delete_room_record(request, room_number):
 # =====================================================================
 @api_view(['PUT', 'DELETE'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
+@superadmin_required
 def room_detail_update_delete(request, room_number):
     """
     Routes PUT (Edit) and DELETE (Remove) requests strictly to Super Admin role.

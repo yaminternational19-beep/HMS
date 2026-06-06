@@ -95,10 +95,11 @@ def onboard_staff_agent(request):
 # =====================================================================
 @api_view(['GET', 'POST'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
+@superadmin_required
 def staff_list_create(request):
     """
     Routes GET requests to list all staff and POST requests to onboard new staff.
-    Both methods are guarded via @superadmin_required inside their handler methods.
+    Guarded via @superadmin_required.
     """
     if request.method == 'GET':
         return get_staff_list(request)
@@ -198,10 +199,11 @@ def delete_staff_agent(request, staff_id):
 # =====================================================================
 @api_view(['PUT', 'DELETE'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
+@superadmin_required
 def staff_detail_update_delete(request, staff_id):
     """
     Routes PUT (Edit) and DELETE (Remove) requests for a single staff ID.
-    Both methods are guarded via @superadmin_required inside their handler methods.
+    Guarded via @superadmin_required.
     """
     if request.method == 'PUT':
         return update_staff_agent(request, staff_id)

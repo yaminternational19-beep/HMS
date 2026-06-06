@@ -89,10 +89,11 @@ def create_shift_record(request):
 # =====================================================================
 @api_view(['GET', 'POST'])
 @parser_classes([JSONParser])
+@superadmin_required
 def shift_list_create(request):
     """
     Routes GET requests to list all shifts and POST requests to define custom shifts.
-    Both methods are guarded via @superadmin_required inside their handler methods.
+    Guarded via @superadmin_required.
     """
     if request.method == 'GET':
         return get_shifts_list(request)
@@ -192,10 +193,11 @@ def delete_shift_record(request, shift_id):
 # =====================================================================
 @api_view(['PUT', 'DELETE'])
 @parser_classes([JSONParser])
+@superadmin_required
 def shift_detail_update_delete(request, shift_id):
     """
     Routes PUT (Edit) and DELETE (Remove) requests for a single shift ID.
-    Both methods are guarded via @superadmin_required inside their handler methods.
+    Guarded via @superadmin_required.
     """
     if request.method == 'PUT':
         return update_shift_record(request, shift_id)
