@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdEdit, MdDelete } from 'react-icons/md';
+import { MdEdit, MdDelete, MdVisibility } from 'react-icons/md';
 import ActionButton from '../../../components/ActionButton';
 
 const BookingTable = ({ 
@@ -109,6 +109,12 @@ const BookingTable = ({
                 </td>
                 <td>
                   <div className="action-group justify-center">
+                    <ActionButton
+                      onClick={() => onView(booking)}
+                      variant="table-view"
+                      title="View Details"
+                      icon={MdVisibility}
+                    />
                     <ActionButton
                       onClick={() => onEdit(booking)}
                       variant="table-edit"

@@ -7,6 +7,7 @@ from .serializers import BookingSerializer
 from .models import Booking, BookingPayment, BookingTransaction, BookingGuest, BookingDocument
 from apps.superadmin.rooms.models import Rooms
 from apps.superadmin.staff.models import Staff
+from apps.superadmin.shifts.models import Shifts
 
 class BookingValidatorTestCase(TestCase):
     """
@@ -47,7 +48,13 @@ class BookingSerializerTestCase(TestCase):
             "paymentStatus": "Paid",
             "totalGuests": 2,
             "amount": 16000.0,
-            "rawData": {"bookingDetails": {"nights": 5}}
+            "rawData": {
+                "bookingDetails": {"nights": 5},
+                "idProof": {
+                    "idType": "Aadhaar",
+                    "idNumber": "123456789012"
+                }
+            }
         }
 
     def test_serializer_validation_success(self):
@@ -89,11 +96,27 @@ class BookingServiceIntegrationTestCase(TestCase):
             status="available"
         )
         
+        # Create a dummy Shift for staff
+        self.shift = Shifts.objects.create(
+            id="SHF-10",
+            name="Front Office Shift",
+            time="07:00 AM - 03:00 PM",
+            icon="sun",
+            color="blue"
+        )
+        
         self.staff_member = Staff.objects.create(
-            first_name="Jane",
-            last_name="Manager",
+            id="STF-10",
+            uniqueCode="87654321",
+            name="Jane Manager",
+            dept="Front Office",
+            phoneCountry="+91",
+            phoneNo="9876543210",
+            emergencyCountry="+91",
+            emergencyNo="9876543211",
+            shift=self.shift,
             status="active",
-            role="front_office_staff"
+            address="Frontdesk Office"
         )
 
         self.payload = {

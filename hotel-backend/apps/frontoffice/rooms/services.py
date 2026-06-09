@@ -206,3 +206,27 @@ class FrontOfficeRoomService:
                 pass
 
         return cls.serialize_room_frontoffice(room, active_bookings_dict)
+
+    @classmethod
+    def get_available_rooms(cls, include_room_number: str = None) -> dict:
+        """
+        Retrieves all rooms that have status='available' (case-insensitive),
+        optionally including a specific room number (e.g. for edit mode).
+        Returns both the list of serialized rooms and the unique room types.
+        """
+        query = Q(status='available')
+        if include_room_number:
+            query |= Q(room_number=include_room_number.strip())
+
+        rooms = Rooms.objects.filter(query).order_by('room_number')
+        
+        # Extract unique available room types
+        unique_types = sorted(list(set(r.room_type for r in rooms)))
+        
+        # Serialize rooms
+        serialized_rooms = [cls.serialize_room_frontoffice(r) for r in rooms]
+        
+        return {
+            "roomTypes": unique_types,
+            "rooms": serialized_rooms
+        }

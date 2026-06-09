@@ -1,4 +1,5 @@
 import os
+import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 from django.db import models
@@ -67,14 +68,271 @@ class BookingService:
         }
 
     @classmethod
-    def get_all_bookings(cls, filters: dict = None) -> list:
+    def seed_dummy_bookings_if_empty(cls):
         """
-        Queries and filters booking records, ordering them from newest to oldest.
+        Dynamically seeds two dummy reservations in the database if it is empty.
+        Links them to existing rooms in the database if available.
         """
+        if Booking.objects.exists():
+            return
+
+        # 1. Retrieve or create Classic Queen room
+        room_101, _ = Rooms.objects.get_or_create(
+            room_number="101",
+            defaults={
+                "floor": "1st Floor",
+                "room_type": "Classic Queen",
+                "bed_type": "Queen",
+                "capacity": 2,
+                "price": 8000.0,
+                "status": "reserved",
+                "amenities": ["WiFi", "AC", "TV", "Mini Bar", "Balcony", "Safe", "Room Service", "Jacuzzi", "Infinity Pool"],
+                "images": ["http://localhost:8000/uploads/rooms/1124a8565d9f49119673cde18ac36568.png"],
+                "description": "this is a fantastic room"
+            }
+        )
+
+        # 2. Retrieve or create Classic King room
+        room_102, _ = Rooms.objects.get_or_create(
+            room_number="102",
+            defaults={
+                "floor": "1st Floor",
+                "room_type": "Classic King",
+                "bed_type": "Double Queen",
+                "capacity": 4,
+                "price": 13000.0,
+                "status": "occupied",
+                "amenities": ["WiFi", "AC", "TV", "Mini Bar", "Valet Parking", "Spa Lounge", "Private Chef", "Infinity Pool", "Balcony", "Safe", "Room Service", "Jacuzzi"],
+                "images": [
+                    "http://localhost:8000/uploads/rooms/a64e5cdd19b448998ae23e66fe30e08e.png",
+                    "http://localhost:8000/uploads/rooms/252ba37119d3440890b8ed7f52fdec63.png"
+                ],
+                "description": "nksdjnflk sojdf;lksjdl;f sidjf ;sldkfnj;lsd foisjd lf;nsd;lkn vcjn"
+            }
+        )
+
+        now = timezone.now()
+
+        # Booking 1: Confirmed/Reserved
+        b1 = Booking.objects.create(
+            booking_code="BKG-771122",
+            guest_name="Rohan Patel",
+            phone="+91 98765 43210",
+            room=room_101,
+            room_snapshot_number="101",
+            room_snapshot_type="Classic Queen",
+            check_in=now + datetime.timedelta(days=1),
+            check_out=now + datetime.timedelta(days=3),
+            booking_source="Online",
+            adults_count=2,
+            children_count=0,
+            status="Confirmed",
+            total_guests=2,
+            raw_data={
+                "bookingDetails": {
+                    "bookingSource": "Online",
+                    "purposeOfVisit": "Tourism",
+                    "adultsCount": 2,
+                    "childrenCount": 0,
+                    "checkIn": (now + datetime.timedelta(days=1)).strftime('%Y-%m-%dT12:00'),
+                    "checkOut": (now + datetime.timedelta(days=3)).strftime('%Y-%m-%dT11:00'),
+                    "roomType": "Classic Queen",
+                    "roomNumber": "101",
+                    "nights": 2
+                },
+                "primaryGuest": {
+                    "guestName": "Rohan Patel",
+                    "phone": "+91 98765 43210",
+                    "email": "rohan.patel@example.com",
+                    "nationality": "Indian"
+                },
+                "idProof": {
+                    "idType": "Aadhaar",
+                    "idNumber": "123456789012",
+                    "verificationStatus": "Verified"
+                },
+                "paymentDetails": {
+                    "roomRent": "16000.00",
+                    "extraCharges": "0.00",
+                    "discount": "0.00",
+                    "gst": "2880.00",
+                    "advancePaid": "5000.00",
+                    "finalAmount": "18880.00",
+                    "paymentStatus": "Partial",
+                    "paymentMethod": "UPI"
+                }
+            }
+        )
+        BookingPayment.objects.create(
+            booking=b1,
+            room_rent=Decimal('16000.00'),
+            extra_charges=Decimal('0.00'),
+            discount=Decimal('0.00'),
+            gst=Decimal('2880.00'),
+            advance_paid=Decimal('5000.00'),
+            final_amount=Decimal('18880.00'),
+            payment_status="Partial",
+            payment_method="UPI",
+            invoice_number="INV-882211"
+        )
+        BookingTransaction.objects.create(
+            booking=b1,
+            transaction_type="Advance",
+            amount=Decimal('5000.00'),
+            payment_method="UPI",
+            remarks="Online Advance Payment"
+        )
+        BookingGuest.objects.create(
+            booking=b1,
+            full_name="Rohan Patel",
+            phone="+91 98765 43210",
+            email="rohan.patel@example.com",
+            nationality="Indian",
+            id_type="Aadhaar",
+            id_number="123456789012",
+            is_primary_guest=True
+        )
+
+        # Booking 2: Checked-In
+        b2 = Booking.objects.create(
+            booking_code="BKG-334455",
+            guest_name="Alice Wonderland",
+            phone="+91 99988 87776",
+            room=room_102,
+            room_snapshot_number="102",
+            room_snapshot_type="Classic King",
+            check_in=now - datetime.timedelta(days=1),
+            check_out=now + datetime.timedelta(days=1),
+            booking_source="Walk-in",
+            adults_count=1,
+            children_count=0,
+            status="Checked-In",
+            total_guests=1,
+            raw_data={
+                "bookingDetails": {
+                    "bookingSource": "Walk-in",
+                    "purposeOfVisit": "Leisure",
+                    "adultsCount": 1,
+                    "childrenCount": 0,
+                    "checkIn": (now - datetime.timedelta(days=1)).strftime('%Y-%m-%dT12:00'),
+                    "checkOut": (now + datetime.timedelta(days=1)).strftime('%Y-%m-%dT11:00'),
+                    "roomType": "Classic King",
+                    "roomNumber": "102",
+                    "nights": 2
+                },
+                "primaryGuest": {
+                    "guestName": "Alice Wonderland",
+                    "phone": "+91 99988 87776",
+                    "email": "alice@wonderland.com",
+                    "nationality": "Indian"
+                },
+                "idProof": {
+                    "idType": "Passport",
+                    "idNumber": "A1234567",
+                    "verificationStatus": "Verified"
+                },
+                "paymentDetails": {
+                    "roomRent": "26000.00",
+                    "extraCharges": "0.00",
+                    "discount": "0.00",
+                    "gst": "4680.00",
+                    "advancePaid": "30680.00",
+                    "finalAmount": "30680.00",
+                    "paymentStatus": "Paid",
+                    "paymentMethod": "Card"
+                }
+            }
+        )
+        BookingPayment.objects.create(
+            booking=b2,
+            room_rent=Decimal('26000.00'),
+            extra_charges=Decimal('0.00'),
+            discount=Decimal('0.00'),
+            gst=Decimal('4680.00'),
+            advance_paid=Decimal('30680.00'),
+            final_amount=Decimal('30680.00'),
+            payment_status="Paid",
+            payment_method="Card",
+            invoice_number="INV-334455"
+        )
+        BookingTransaction.objects.create(
+            booking=b2,
+            transaction_type="Advance",
+            amount=Decimal('30680.00'),
+            payment_method="Card",
+            remarks="Full advance payment at check-in"
+        )
+        BookingGuest.objects.create(
+            booking=b2,
+            full_name="Alice Wonderland",
+            phone="+91 99988 87776",
+            email="alice@wonderland.com",
+            nationality="Indian",
+            id_type="Passport",
+            id_number="A1234567",
+            is_primary_guest=True
+        )
+
+    @classmethod
+    def get_all_bookings(cls, filters: dict = None) -> dict:
+        """
+        Seeds dummy bookings if database is empty, retrieves and filters all records,
+        calculates aggregate stats, paginates the result set, and returns a structured dictionary.
+        """
+        # Seed first if empty
+        cls.seed_dummy_bookings_if_empty()
+
         queryset = Booking.objects.all().order_by('-created_at')
 
+        # 1. Calculate general stats on the query before pagination
+        total_bookings = Booking.objects.count()
+        confirmed = Booking.objects.filter(status='Confirmed').count()
+        pending = Booking.objects.filter(status='Pending').count()
+        checked_in = Booking.objects.filter(status='Checked-In').count()
+        checked_out = Booking.objects.filter(status='Checked-Out').count()
+        cancelled = Booking.objects.filter(status='Cancelled').count()
+        
+        from django.db.models import Sum
+        checked_in_guests = Booking.objects.filter(status='Checked-In').aggregate(Sum('total_guests'))['total_guests__sum'] or 0
+        
+        arrivals_count = Booking.objects.filter(status__in=['Confirmed', 'Pending', 'Checked-In']).count()
+        departures_count = Booking.objects.filter(status__in=['Checked-In', 'Checked-Out']).count()
+        pending_checkouts = Booking.objects.filter(status='Checked-In').count()
+        reserved_rooms = confirmed
+
+        # Calculate pending collections and guests with balance
+        pending_collections = 0.0
+        guests_with_balance = 0
+        for b in Booking.objects.filter(status='Checked-In'):
+            try:
+                payment = b.payment_details
+                balance = float(payment.final_amount - payment.advance_paid)
+                if balance > 0:
+                    pending_collections += balance
+                    guests_with_balance += 1
+            except Exception:
+                pass
+        
+        stats = {
+            "total": total_bookings,
+            "active": confirmed + checked_in,
+            "checkedIn": checked_in_guests,
+            "pendingCheckout": pending_checkouts,
+            "arrivals": arrivals_count,
+            "departures": departures_count,
+            "pendingArrivals": confirmed + pending,
+            "pendingDepartures": checked_in,
+            "pendingCollections": pending_collections,
+            "guestsWithBalance": guests_with_balance,
+            "reserved": reserved_rooms,
+            "pending": pending,
+            "confirmed": confirmed,
+            "checkedOut": checked_out,
+            "cancelled": cancelled
+        }
+
+        # 2. Apply filters
         if filters:
-            # 1. Search filter: Guest Name, Phone, or Booking Code
             search = filters.get('search')
             if search:
                 queryset = queryset.filter(
@@ -83,17 +341,56 @@ class BookingService:
                     Q(booking_code__icontains=search)
                 )
 
-            # 2. Status filter
             status = filters.get('status')
             if status and status.lower() != 'all':
-                queryset = queryset.filter(status__iexact=status)
+                if ',' in status:
+                    status_list = [s.strip() for s in status.split(',')]
+                    queryset = queryset.filter(status__in=status_list)
+                else:
+                    queryset = queryset.filter(status__iexact=status)
 
-            # 3. Room Type filter
             room_type = filters.get('roomType') or filters.get('room_type')
             if room_type and room_type.lower() != 'all':
                 queryset = queryset.filter(room_snapshot_type__iexact=room_type)
 
-        return [cls.serialize_booking(b) for b in queryset]
+        # 3. Pagination calculations
+        total_filtered = queryset.count()
+        
+        try:
+            page = int(filters.get('page', 1)) if filters else 1
+        except (ValueError, TypeError):
+            page = 1
+
+        try:
+            limit = int(filters.get('limit', 10)) if filters else 10
+        except (ValueError, TypeError):
+            limit = 10
+
+        if page < 1:
+            page = 1
+        if limit < 1:
+            limit = 10
+
+        total_pages = (total_filtered + limit - 1) // limit if total_filtered > 0 else 1
+        
+        start_idx = (page - 1) * limit
+        end_idx = start_idx + limit
+        paginated_queryset = queryset[start_idx:end_idx]
+
+        pagination = {
+            "totalItems": total_filtered,
+            "itemsPerPage": limit,
+            "currentPage": page,
+            "totalPages": total_pages
+        }
+
+        serialized_bookings = [cls.serialize_booking(b) for b in paginated_queryset]
+
+        return {
+            "bookings": serialized_bookings,
+            "stats": stats,
+            "pagination": pagination
+        }
 
     @classmethod
     def get_booking_by_code(cls, booking_code: str) -> dict:
@@ -131,7 +428,12 @@ class BookingService:
         if status == 'Checked-In':
             room_instance.status = 'occupied'
             room_instance.status_updated_by_role = 'staff'
-            room_instance.status_updated_by_id = str(actor_employee.id)
+            room_instance.status_updated_by_id = str(actor_employee.id) if actor_employee else 'system'
+            room_instance.save()
+        elif status == 'Confirmed' or status == 'Reserved':
+            room_instance.status = 'reserved'
+            room_instance.status_updated_by_role = 'staff'
+            room_instance.status_updated_by_id = str(actor_employee.id) if actor_employee else 'system'
             room_instance.save()
 
         # 4. Extract fields from nested raw_data payload
@@ -235,7 +537,14 @@ class BookingService:
         advance_paid = Decimal(str(pay_raw.get('advancePaid') or 0.00))
         final_amount = Decimal(str(pay_raw.get('finalAmount') or data.get('amount') or 0.00))
 
-        payment_status = pay_raw.get('paymentStatus') or data.get('paymentStatus') or 'Pending'
+        # Automate payment status computation
+        if advance_paid >= final_amount and final_amount > Decimal('0.00'):
+            payment_status = 'Paid'
+        elif advance_paid > Decimal('0.00'):
+            payment_status = 'Partial'
+        else:
+            payment_status = 'Pending'
+
         payment_method = pay_raw.get('paymentMethod') or 'Cash'
         transaction_id = pay_raw.get('transactionId') or ''
         invoice_number = pay_raw.get('invoiceNumber') or ''
@@ -378,6 +687,20 @@ class BookingService:
         if new_status and new_status != booking.status:
             booking.status = new_status
             
+            # Check constraint: Checkout cannot be done before full payment
+            if new_status == 'Checked-Out':
+                try:
+                    payment = booking.payment_details
+                    if payment.advance_paid < payment.final_amount:
+                        raise ValueError(
+                            "Checkout cannot be processed because the booking has an outstanding balance. "
+                            "Full payment is required before checkout."
+                        )
+                except BookingPayment.DoesNotExist:
+                    pass
+
+            booking.status = new_status
+            
             # Sync timestamps
             if new_status == 'Checked-In':
                 booking.checked_in_at = timezone.now()
@@ -386,7 +709,7 @@ class BookingService:
             elif new_status == 'Cancelled':
                 booking.cancelled_at = timezone.now()
 
-            # Sync room state based on checkout or cancel
+            # Sync room state based on status
             if room_instance:
                 actor_role = 'staff' if actor_employee else 'system'
                 actor_id = str(actor_employee.id) if actor_employee else 'system'
@@ -397,6 +720,8 @@ class BookingService:
                     room_instance.status = 'cleaning'
                 elif new_status == 'Cancelled':
                     room_instance.status = 'available'
+                elif new_status == 'Confirmed' or new_status == 'Reserved':
+                    room_instance.status = 'reserved'
                 
                 room_instance.status_updated_by_role = actor_role
                 room_instance.status_updated_by_id = actor_id
@@ -484,10 +809,16 @@ class BookingService:
         elif 'amount' in data:
             payment.final_amount = Decimal(str(data['amount']))
             
-        if 'paymentStatus' in pay_raw:
-            payment.payment_status = pay_raw['paymentStatus']
-        elif 'paymentStatus' in data:
-            payment.payment_status = data['paymentStatus']
+        # Automate payment status updates
+        if payment.final_amount > Decimal('0.00'):
+            if payment.advance_paid >= payment.final_amount:
+                payment.payment_status = 'Paid'
+            elif payment.advance_paid > Decimal('0.00'):
+                payment.payment_status = 'Partial'
+            else:
+                payment.payment_status = 'Pending'
+        else:
+            payment.payment_status = pay_raw.get('paymentStatus') or data.get('paymentStatus') or 'Pending'
             
         if 'paymentMethod' in pay_raw:
             payment.payment_method = pay_raw['paymentMethod']
@@ -584,3 +915,84 @@ class BookingService:
             guest_item.save()
 
         return cls.serialize_booking(booking)
+
+    @classmethod
+    def generate_payslip_details(cls, booking_code: str) -> dict:
+        """
+        Generates and formats structured payslip details for a fully paid booking.
+        Includes company, lodging service details, and calculated invoice breakdowns.
+        """
+        try:
+            booking = Booking.objects.select_related('room').get(booking_code=booking_code.strip())
+        except Booking.DoesNotExist:
+            raise ValueError(f"Booking {booking_code} does not exist.")
+
+        # Payment details check
+        try:
+            payment = booking.payment_details
+            final_amount = float(payment.final_amount)
+            advance_paid = float(payment.advance_paid)
+            room_rent = float(payment.room_rent)
+            extra_charges = float(payment.extra_charges)
+            discount = float(payment.discount)
+            gst = float(payment.gst)
+            payment_status = payment.payment_status
+            payment_method = payment.payment_method
+            transaction_id = payment.transaction_id
+            invoice_number = payment.invoice_number
+        except BookingPayment.DoesNotExist:
+            raw_details = booking.raw_data or {}
+            pay_raw = raw_details.get('paymentDetails', {}) or {}
+            final_amount = float(pay_raw.get('finalAmount') or 0.00)
+            advance_paid = float(pay_raw.get('advancePaid') or 0.00)
+            room_rent = float(pay_raw.get('roomRent') or 0.00)
+            extra_charges = float(pay_raw.get('extraCharges') or 0.00)
+            discount = float(pay_raw.get('discount') or 0.00)
+            gst = float(pay_raw.get('gst') or 0.00)
+            payment_status = pay_raw.get('paymentStatus') or 'Pending'
+            payment_method = pay_raw.get('paymentMethod') or 'Cash'
+            transaction_id = pay_raw.get('transactionId') or ''
+            invoice_number = pay_raw.get('invoiceNumber') or ''
+
+        # Ensure checkout balance validation before payslip generation
+        if payment_status != 'Paid' and advance_paid < final_amount:
+            raise ValueError(
+                f"Payslip cannot be generated for booking {booking_code} because it has an outstanding balance of "
+                f"₹{final_amount - advance_paid:.2f}. Please clear the balance first."
+            )
+
+        # Dates formatting
+        check_in_str = booking.check_in.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d %I:%M %p') if booking.check_in else ''
+        check_out_str = booking.check_out.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d %I:%M %p') if booking.check_out else ''
+
+        # Calculate number of nights
+        nights = 0
+        if booking.check_in and booking.check_out:
+            nights = (booking.check_out - booking.check_in).days
+            if nights <= 0:
+                nights = 1
+
+        return {
+            "buildingName": "SNOWLINE BLOOM",
+            "serviceName": "Front Desk Reservation & Lodging Service",
+            "invoiceNumber": invoice_number,
+            "bookingCode": booking.booking_code,
+            "guestName": booking.guest_name,
+            "phone": booking.phone,
+            "roomNumber": booking.room_snapshot_number,
+            "roomType": booking.room_snapshot_type,
+            "checkIn": check_in_str,
+            "checkOut": check_out_str,
+            "nights": nights,
+            "roomRentPerNight": float(booking.room.price if booking.room else room_rent),
+            "roomRentSubtotal": room_rent * nights,
+            "extraCharges": extra_charges,
+            "discount": discount,
+            "gst": gst,
+            "finalAmount": final_amount,
+            "amountPaid": advance_paid,
+            "paymentStatus": payment_status,
+            "paymentMethod": payment_method,
+            "transactionId": transaction_id,
+            "status": booking.status,
+        }

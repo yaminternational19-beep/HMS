@@ -23,6 +23,7 @@ class BookingSerializer(serializers.ModelSerializer):
     amount = serializers.FloatField(required=False, default=0.0)
     
     cancellationReason = serializers.CharField(source='cancellation_reason', required=False, allow_blank=True, default='')
+    totalGuests = serializers.IntegerField(source='total_guests', required=False, default=1)
     rawData = serializers.JSONField(source='raw_data', required=False, default=dict)
 
     class Meta:
@@ -108,5 +109,23 @@ class BookingSerializer(serializers.ModelSerializer):
             validate_booking_dates(check_in, check_out)
         except ValueError as ve:
             raise serializers.ValidationError({"checkIn": str(ve)})
+
+        # Validate Government ID proof details
+        raw_data = data.get('raw_data', {})
+        id_proof = raw_data.get('idProof', {}) if isinstance(raw_data, dict) else None
+
+        if not self.instance or id_proof:
+            from .validator import validate_guest_id_proof
+            if self.instance and not id_proof:
+                existing_raw = self.instance.raw_data or {}
+                id_proof = existing_raw.get('idProof', {})
+            
+            if id_proof:
+                try:
+                    validate_guest_id_proof(id_proof.get('idType'), id_proof.get('idNumber'))
+                except ValueError as ve:
+                    raise serializers.ValidationError({"idProof": str(ve)})
+            elif not self.instance:
+                raise serializers.ValidationError({"idProof": "Government ID proof details are required."})
 
         return data

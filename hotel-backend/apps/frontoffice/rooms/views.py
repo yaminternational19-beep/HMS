@@ -119,3 +119,33 @@ def update_room_status_view(request, room_number):
             errors={"server": str(e)},
             status_code=StatusCodes.INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['GET'])
+def available_rooms_view(request):
+    """
+    Retrieves a list of available rooms and room types for booking assignments.
+    Guarded by valid JWT authentication (staff/superadmin).
+    Accepts query parameter: ?include_room=<room_number> to include that room in the response.
+    """
+    if not check_read_permission(request):
+        return error_response(
+            message="Unauthorized. Please log in as a staff member or administrator.",
+            errors={"auth": "Authentication token missing or invalid"},
+            status_code=StatusCodes.UNAUTHORIZED
+        )
+
+    try:
+        include_room = request.GET.get('include_room')
+        result = FrontOfficeRoomService.get_available_rooms(include_room)
+        return success_response(
+            message="Available rooms and types retrieved successfully.",
+            data=result,
+            status_code=StatusCodes.OK
+        )
+    except Exception as e:
+        return error_response(
+            message="Failed to retrieve available rooms.",
+            errors={"server": str(e)},
+            status_code=StatusCodes.INTERNAL_SERVER_ERROR
+        )

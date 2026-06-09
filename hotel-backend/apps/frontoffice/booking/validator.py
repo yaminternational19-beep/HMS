@@ -29,7 +29,7 @@ def validate_room_availability(room_number, check_in, check_out, exclude_booking
     # 2. Check for active (non-cancelled) bookings that overlap in time
     # Overlap logic: check_in_A < check_out_B and check_out_A > check_in_B
     overlapping = Booking.objects.filter(
-        room_number=room_number.strip(),
+        room_snapshot_number=room_number.strip(),
         check_in__lt=check_out,
         check_out__gt=check_in
     ).exclude(status='Cancelled')
@@ -45,3 +45,16 @@ def validate_room_availability(room_number, check_in, check_out, exclude_booking
         )
     
     return room
+
+def validate_guest_id_proof(id_type, id_number):
+    """
+    Validates that the government ID proof type is one of the allowed values
+    and the ID number is provided.
+    """
+    ALLOWED_IDS = {'Aadhaar', 'PAN', 'Passport', 'Voter ID', 'Driving License'}
+    if not id_type:
+        raise ValueError("Government ID type is required.")
+    if id_type not in ALLOWED_IDS:
+        raise ValueError(f"Invalid ID type '{id_type}'. Allowed types are: {', '.join(sorted(list(ALLOWED_IDS)))}.")
+    if not id_number or not id_number.strip():
+        raise ValueError("Government ID number is required.")

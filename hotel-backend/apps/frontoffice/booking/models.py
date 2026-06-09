@@ -54,6 +54,7 @@ class Booking(models.Model):
     adults_count = models.IntegerField(default=1)
     children_count = models.IntegerField(default=0)
     extra_bed = models.BooleanField(default=False)
+    total_guests = models.IntegerField(default=1)
     expected_arrival = models.DateTimeField(null=True, blank=True)
     special_requests = models.TextField(blank=True, default='')
     

@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from core.response.api_response import success_response, error_response
 from core.services.statuscodes import StatusCodes
 from .services import BookingService
@@ -52,11 +53,13 @@ def booking_list_create(request):
                 'search': request.GET.get('search'),
                 'status': request.GET.get('status'),
                 'roomType': request.GET.get('roomType'),
+                'page': request.GET.get('page'),
+                'limit': request.GET.get('limit'),
             }
-            bookings = BookingService.get_all_bookings(filters)
+            result = BookingService.get_all_bookings(filters)
             return success_response(
                 message="Bookings retrieved successfully.",
-                data=bookings,
+                data=result,
                 status_code=StatusCodes.OK
             )
         except Exception as e:
@@ -230,3 +233,199 @@ def booking_detail_update(request, booking_code):
                 errors={"server": str(e)},
                 status_code=StatusCodes.INTERNAL_SERVER_ERROR
             )
+
+
+# =====================================================================
+# API 5: Route handler to generate receipt/payslip
+# =====================================================================
+@api_view(['GET'])
+def generate_payslip(request, booking_code):
+    """
+    GET: Generate a structured receipt/payslip for a fully paid booking.
+    Allows both staff employees and super admins to view the receipt.
+    """
+    if not check_read_permission(request):
+        return error_response(
+            message="Unauthorized. Please log in as a staff member or administrator.",
+            errors={"auth": "Authentication token missing or invalid"},
+            status_code=StatusCodes.UNAUTHORIZED
+        )
+
+    try:
+        payslip_data = BookingService.generate_payslip_details(booking_code)
+        return success_response(
+            message="Payslip generated successfully.",
+            data=payslip_data,
+            status_code=StatusCodes.OK
+        )
+    except ValueError as ve:
+        error_msg = str(ve)
+        status_code = StatusCodes.NOT_FOUND if "does not exist" in error_msg else StatusCodes.BAD_REQUEST
+        return error_response(
+            message=error_msg,
+            errors={"validation": error_msg},
+            status_code=status_code
+        )
+    except Exception as e:
+        return error_response(
+            message="Failed to generate payslip.",
+            errors={"server": str(e)},
+            status_code=StatusCodes.INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+def upload_document(request):
+    """
+    POST: Upload a file (ID Proof) and return the public URL path.
+    """
+    if not check_write_permission(request):
+        return error_response(
+            message="Unauthorized. Logged-in staff credentials are required.",
+            errors={"auth": "Authentication token missing or invalid"},
+            status_code=StatusCodes.UNAUTHORIZED
+        )
+        
+    uploaded_file = request.FILES.get('file')
+    if not uploaded_file:
+        return error_response(
+            message="No file was provided.",
+            errors={"file": "Missing file"},
+            status_code=StatusCodes.BAD_REQUEST
+        )
+
+    try:
+        from core.services.upload_service import UploadService
+        # Upload file to 'bookings' subfolder
+        path = UploadService.upload_single_file(uploaded_file, subfolder='bookings')
+        full_url = f"http://localhost:8000{path}"
+        return success_response(
+            message="File uploaded successfully.",
+            data={"url": full_url, "name": uploaded_file.name},
+            status_code=StatusCodes.CREATED
+        )
+    except Exception as e:
+        return error_response(
+            message="Failed to upload file.",
+            errors={"server": str(e)},
+            status_code=StatusCodes.INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def invoice_list(request):
+    """
+    GET: Retrieve all invoices mapped from bookings (Staff & Super Admin allowed).
+    """
+    if not check_read_permission(request):
+        return error_response(
+            message="Unauthorized. Please log in as a staff member or administrator.",
+            errors={"auth": "Authentication token missing or invalid"},
+            status_code=StatusCodes.UNAUTHORIZED
+        )
+        
+    try:
+        from .models import Booking, BookingPayment
+        from zoneinfo import ZoneInfo
+        
+        bookings = Booking.objects.select_related('room').all().order_by('-created_at')
+        invoices = []
+        
+        for booking in bookings:
+            try:
+                payment = booking.payment_details
+                final_amount = float(payment.final_amount)
+                advance_paid = float(payment.advance_paid)
+                room_rent = float(payment.room_rent)
+                extra_charges = float(payment.extra_charges)
+                discount = float(payment.discount)
+                gst = float(payment.gst)
+                payment_status = payment.payment_status
+                payment_method = payment.payment_method
+                invoice_number = payment.invoice_number
+                paid_date = booking.checked_out_at.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d') if booking.checked_out_at else None
+            except BookingPayment.DoesNotExist:
+                raw_details = booking.raw_data or {}
+                pay_raw = raw_details.get('paymentDetails', {}) or {}
+                final_amount = float(pay_raw.get('finalAmount') or 0.00)
+                advance_paid = float(pay_raw.get('advancePaid') or 0.00)
+                room_rent = float(pay_raw.get('roomRent') or 0.00)
+                extra_charges = float(pay_raw.get('extraCharges') or 0.00)
+                discount = float(pay_raw.get('discount') or 0.00)
+                gst = float(pay_raw.get('gst') or 0.00)
+                payment_status = pay_raw.get('paymentStatus') or 'Pending'
+                payment_method = pay_raw.get('paymentMethod') or 'Cash'
+                invoice_number = pay_raw.get('invoiceNumber') or ''
+                paid_date = None
+
+            check_in_str = booking.check_in.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d') if booking.check_in else ''
+            check_out_str = booking.check_out.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d') if booking.check_out else ''
+            issued_date_str = booking.created_at.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d') if booking.created_at else check_in_str
+
+            nights = 0
+            if booking.check_in and booking.check_out:
+                nights = (booking.check_out - booking.check_in).days
+                if nights <= 0:
+                    nights = 1
+
+            if booking.status == 'Cancelled':
+                inv_status = 'Cancelled'
+            elif payment_status == 'Paid':
+                inv_status = 'Paid'
+            elif payment_status == 'Partial':
+                inv_status = 'Partial Payment'
+            elif booking.status == 'Checked-Out' and advance_paid < final_amount:
+                inv_status = 'Overdue'
+            else:
+                inv_status = 'Pending'
+
+            line_items = [
+                {
+                    "description": f"Room Rent ({nights} night{'s' if nights > 1 else ''} × ₹{booking.room.price if booking.room else room_rent:.2f})",
+                    "amount": room_rent
+                }
+            ]
+            if extra_charges > 0:
+                line_items.append({
+                    "description": "Room Service & Extras",
+                    "amount": extra_charges
+                })
+
+            invoice_id = invoice_number if invoice_number else f"INV-{booking.booking_code}"
+
+            invoices.append({
+                "id": invoice_id,
+                "bookingId": booking.booking_code,
+                "guestName": booking.guest_name,
+                "phone": booking.phone,
+                "roomNumber": booking.room_snapshot_number,
+                "roomType": booking.room_snapshot_type,
+                "checkIn": check_in_str,
+                "checkOut": check_out_str,
+                "nights": nights,
+                "lineItems": line_items,
+                "subTotal": room_rent + extra_charges,
+                "discount": discount,
+                "gst": gst,
+                "totalAmount": final_amount,
+                "paidAmount": advance_paid,
+                "balanceDue": max(0.0, final_amount - advance_paid),
+                "status": inv_status,
+                "paymentMethod": payment_method,
+                "issuedDate": issued_date_str,
+                "paidDate": paid_date,
+                "raw": booking.raw_data or {}
+            })
+
+        return success_response(
+            message="Invoices retrieved successfully.",
+            data=invoices,
+            status_code=StatusCodes.OK
+        )
+    except Exception as e:
+        return error_response(
+            message="Failed to retrieve invoices list.",
+            errors={"server": str(e)},
+            status_code=StatusCodes.INTERNAL_SERVER_ERROR
+        )

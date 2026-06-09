@@ -1,24 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MdOutlineSearch, MdRestartAlt } from 'react-icons/md';
 import InvoiceStats from './components/InvoiceStats';
 import InvoiceTable from './components/InvoiceTable';
 import InvoiceDetailModal from './components/InvoiceDetailModal';
-import { INVOICES } from '../../mockdata/invoices.mock';
+import { getInvoicesList, updateBooking } from '../../api/booking';
 import { INVOICE_STATUS } from './constants/invoiceStatus';
 import { useToastStore } from '../../store/useToastStore';
 import ActionButton from '../../components/ActionButton';
 import Pagination from '../../components/Pagination';
+import { Loader2 } from 'lucide-react';
 import './styles/invoices.css';
 
 const InvoicesPage = () => {
-  const [invoices, setInvoices] = useState(INVOICES);
+  const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [loading, setLoading] = useState(true);
   const addToast = useToastStore(s => s.addToast);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const fetchInvoices = async () => {
+    setLoading(true);
+    try {
+      const response = await getInvoicesList();
+      if (response && response.success) {
+        setInvoices(response.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load invoices:', error);
+      addToast('Failed to load billing invoices from server.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
 
   // Filtering
   const filtered = invoices.filter(inv => {
@@ -37,14 +58,29 @@ const InvoicesPage = () => {
 
   const handleView = (inv) => setSelectedInvoice(inv);
 
-  const handleMarkPaid = (inv) => {
-    setInvoices(prev => prev.map(i =>
-      i.id === inv.id
-        ? { ...i, status: INVOICE_STATUS.PAID, paidAmount: i.totalAmount, balanceDue: 0, paidDate: new Date().toISOString().slice(0, 10) }
-        : i
-    ));
-    addToast(`Invoice ${inv.id} marked as Paid!`, 'success');
-    setSelectedInvoice(null);
+  const handleMarkPaid = async (inv) => {
+    try {
+      const raw = inv.raw || {};
+      const updatedDetails = {
+        ...raw,
+        paymentDetails: {
+          ...(raw.paymentDetails || {}),
+          paymentStatus: 'Paid',
+          advancePaid: inv.totalAmount
+        }
+      };
+      
+      const response = await updateBooking(inv.bookingId, { raw_data: updatedDetails });
+      if (response && response.success) {
+        addToast(`Invoice ${inv.id} marked as Paid!`, 'success');
+        fetchInvoices();
+        setSelectedInvoice(null);
+      }
+    } catch (error) {
+      console.error('Failed to update invoice payment:', error);
+      const errorMsg = error?.response?.data?.message || 'Failed to update payment status.';
+      addToast(errorMsg, 'error');
+    }
   };
 
   const handleReset = () => {
@@ -108,17 +144,24 @@ const InvoicesPage = () => {
           </ActionButton>
         </div>
 
-        {/* Table */}
-        <InvoiceTable invoices={currentItems} onView={handleView} />
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          itemName="invoices"
-        />
+        {/* Table / Loader */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <Loader2 size={32} className="text-indigo-600 animate-spin mb-2" />
+            <p className="text-slate-500 text-sm font-medium">Loading billing invoices...</p>
+          </div>
+        ) : (
+          <>
+            <InvoiceTable invoices={currentItems} onView={handleView} />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              itemName="invoices"
+            />
+          </>
+        )}
 
       </div>
 

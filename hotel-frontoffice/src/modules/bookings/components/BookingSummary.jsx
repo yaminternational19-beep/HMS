@@ -1,15 +1,15 @@
 import React from 'react';
 import { MdTrendingUp } from 'react-icons/md';
 
-const BookingSummary = ({ data = [] }) => {
-  // Compute counts
-  const arrivals = data.filter(b => b.checkIn === '2026-05-18' && b.status !== 'Cancelled').length;
-  const departures = data.filter(b => b.checkOut === '2026-05-18' && b.status !== 'Cancelled').length;
-  const reserved = data.filter(b => b.status === 'Confirmed').length;
+const BookingSummary = ({ data = [], stats = {} }) => {
+  // Compute counts dynamically or use backend pre-calculated stats
+  const arrivals = stats.arrivals !== undefined ? stats.arrivals : data.filter(b => b.checkIn === '2026-05-18' && b.status !== 'Cancelled').length;
+  const departures = stats.departures !== undefined ? stats.departures : data.filter(b => b.checkOut === '2026-05-18' && b.status !== 'Cancelled').length;
+  const reserved = stats.reserved !== undefined ? stats.reserved : data.filter(b => b.status === 'Confirmed').length;
 
   const cards = [
-    { title: "Today's Arrivals", count: arrivals, unit: 'guests expected', badge: 'Today', note: 'Direct bookings', trend: '90% check-in rate' },
-    { title: "Today's Departures", count: departures, unit: 'rooms leaving', badge: 'Today', note: 'Scheduled checkouts', trend: 'Smooth transition' },
+    { title: "Arrivals", count: arrivals, unit: 'guests expected', badge: 'Active', note: 'Direct bookings', trend: '90% check-in rate' },
+    { title: "Departures", count: departures, unit: 'rooms leaving', badge: 'Active', note: 'Scheduled checkouts', trend: 'Smooth transition' },
     { title: "Reserved Rooms", count: reserved, unit: 'rooms booked', badge: 'Active', note: 'Future occupancy', trend: '+12% this week' }
   ];
 

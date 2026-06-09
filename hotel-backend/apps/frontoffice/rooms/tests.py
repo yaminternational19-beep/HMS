@@ -256,3 +256,35 @@ class FrontOfficeRoomsAPITestCase(TestCase):
         response = self.client.put(detail_url, data=payload, content_type='application/json', **self.staff_headers)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("does not exist", response.json()["message"])
+
+    def test_available_rooms_endpoint_retrieves_only_available_status(self):
+        url = reverse('available_rooms')
+        
+        # 1. GET request without token -> 401
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        
+        # 2. GET request with token -> 200
+        response = self.client.get(url, **self.staff_headers)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        data = response.json()["data"]
+        rooms = data["rooms"]
+        room_types = data["roomTypes"]
+        
+        # Room 101 is available. Room 102 is occupied. Room 201 is maintenance.
+        self.assertEqual(len(rooms), 1)
+        self.assertEqual(rooms[0]["roomNumber"], "101")
+        self.assertEqual(room_types, ["Single"])
+        
+        # 3. GET request with include_room=102 -> returns 101 and 102
+        response = self.client.get(f"{url}?include_room=102", **self.staff_headers)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        data = response.json()["data"]
+        rooms = data["rooms"]
+        self.assertEqual(len(rooms), 2)
+        room_numbers = [r["roomNumber"] for r in rooms]
+        self.assertIn("101", room_numbers)
+        self.assertIn("102", room_numbers)
+        self.assertIn("Double", data["roomTypes"])

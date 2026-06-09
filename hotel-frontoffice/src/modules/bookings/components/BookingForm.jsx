@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { MdClose, MdAdd, MdDelete, MdChevronRight, MdChevronLeft, MdCheckCircle } from 'react-icons/md';
-import { ROOM_TYPES, BOOKING_STATUS } from '../constants/bookingStatus';
+import { ROOM_TYPES } from '../constants/bookingStatus';
 import PhoneInput from '../../../components/PhoneInput';
 import ActionButton from '../../../components/ActionButton';
 import { useToastStore } from '../../../store/useToastStore';
-import { MOCK_ROOMS } from '../../rooms/services/room.service';
+import { getRoomsForBooking } from '../../../api/bookingRooms';
 import { ROOM_STATUS } from '../../rooms/constants/roomStatus';
+import { uploadBookingDocument } from '../../../api/booking';
 
 const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
   const [step, setStep] = useState(1);
@@ -83,6 +84,87 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
   };
 
   const [formData, setFormData] = useState(initialBlankState);
+  const [roomsList, setRoomsList] = useState([]);
+  const [availableTypes, setAvailableTypes] = useState([]);
+  const [isUploadingFront, setIsUploadingFront] = useState(false);
+  const [isUploadingBack, setIsUploadingBack] = useState(false);
+
+  const handleFileUpload = async (e, side) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const isFront = side === 'front';
+    if (isFront) setIsUploadingFront(true);
+    else setIsUploadingBack(true);
+
+    try {
+      const response = await uploadBookingDocument(file);
+      if (response && response.success) {
+        const fileUrl = response.data.url;
+        handleSectionChange('idProof', isFront ? 'frontFileName' : 'backFileName', fileUrl);
+        useToastStore.getState().addToast(`${isFront ? 'Front' : 'Back'} side ID proof uploaded successfully.`, 'success');
+      }
+    } catch (error) {
+      console.error('File upload failed:', error);
+      useToastStore.getState().addToast('Failed to upload document to server.', 'error');
+    } finally {
+      if (isFront) setIsUploadingFront(false);
+      else setIsUploadingBack(false);
+    }
+  };
+
+  const handleMemberFileUpload = async (e, idx) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const response = await uploadBookingDocument(file);
+      if (response && response.success) {
+        handleMemberChange(idx, 'docName', response.data.url);
+        useToastStore.getState().addToast(`Member document uploaded successfully.`, 'success');
+      }
+    } catch (error) {
+      console.error('Member document upload failed:', error);
+      useToastStore.getState().addToast('Failed to upload member document.', 'error');
+    }
+  };
+
+  // Fetch rooms list from backend for booking assignment
+  useEffect(() => {
+    if (isOpen) {
+      const fetchRooms = async () => {
+        try {
+          const includeRoom = editingData ? (editingData.room || editingData.roomNumber || '') : '';
+          const response = await getRoomsForBooking(includeRoom);
+          if (response && response.success) {
+            setRoomsList(response.data?.rooms || []);
+            setAvailableTypes(response.data?.roomTypes || []);
+          }
+        } catch (error) {
+          console.error('Failed to load rooms list for booking:', error);
+          useToastStore.getState().addToast('Failed to load rooms list from backend.', 'error');
+        }
+      };
+      fetchRooms();
+    }
+  }, [isOpen, editingData]);
+
+  // Auto-select first available room type if the current type is not in the available types list
+  useEffect(() => {
+    if (isOpen && availableTypes.length > 0) {
+      const currentType = formData.bookingDetails.roomType;
+      if (!availableTypes.includes(currentType)) {
+        setFormData(prev => ({
+          ...prev,
+          bookingDetails: {
+            ...prev.bookingDetails,
+            roomType: availableTypes[0],
+            roomNumber: '' // reset room number since type changed
+          }
+        }));
+      }
+    }
+  }, [isOpen, availableTypes]);
 
   // Populate data when opening
   useEffect(() => {
@@ -237,7 +319,7 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
 
   const handleRoomNumberChange = (e) => {
     const newRoomNo = e.target.value;
-    const selectedRoom = MOCK_ROOMS.find(r => r.roomNumber === newRoomNo);
+    const selectedRoom = roomsList.find(r => r.roomNumber === newRoomNo);
 
     setFormData(prev => ({
       ...prev,
@@ -252,7 +334,7 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
     }));
   };
 
-  const availableRooms = MOCK_ROOMS.filter(r =>
+  const availableRooms = roomsList.filter(r =>
     r.type === formData.bookingDetails.roomType &&
     (r.status === ROOM_STATUS.AVAILABLE || r.roomNumber === formData.bookingDetails.roomNumber)
   );
@@ -436,10 +518,9 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
                       onChange={handleRoomTypeChange}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 outline-none bg-white cursor-pointer shadow-sm"
                     >
-                      {ROOM_TYPES.map((type) => (
+                      {(availableTypes.length > 0 ? availableTypes : ROOM_TYPES).map((type) => (
                         <option key={type} value={type}>{type}</option>
                       ))}
-                      <option value="Presidential Suite">Presidential Suite</option>
                     </select>
                   </div>
 
@@ -781,18 +862,26 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
                 {/* Simulated File Upload Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-600">Upload Front Side</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-semibold text-slate-600">Upload Front Side</label>
+                      {isUploadingFront && <span className="text-[10px] text-blue-600 font-medium animate-pulse">Uploading...</span>}
+                      {!isUploadingFront && formData.idProof.frontFileName && <span className="text-[10px] text-green-600 font-medium">✓ Uploaded</span>}
+                    </div>
                     <input
                       type="file"
-                      onChange={(e) => handleSectionChange('idProof', 'frontFileName', e.target.files[0]?.name || '')}
+                      onChange={(e) => handleFileUpload(e, 'front')}
                       className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 outline-none bg-white shadow-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-250 cursor-pointer"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-600">Upload Back Side</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-semibold text-slate-600">Upload Back Side</label>
+                      {isUploadingBack && <span className="text-[10px] text-blue-600 font-medium animate-pulse">Uploading...</span>}
+                      {!isUploadingBack && formData.idProof.backFileName && <span className="text-[10px] text-green-600 font-medium">✓ Uploaded</span>}
+                    </div>
                     <input
                       type="file"
-                      onChange={(e) => handleSectionChange('idProof', 'backFileName', e.target.files[0]?.name || '')}
+                      onChange={(e) => handleFileUpload(e, 'back')}
                       className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 outline-none bg-white shadow-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-250 cursor-pointer"
                     />
                   </div>
@@ -994,10 +1083,13 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
 
                           {/* Upload ID / Document */}
                           <div className="space-y-1 col-span-1 md:col-span-2">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase">Upload ID / Document</label>
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Upload ID / Document</label>
+                              {member.docName && <span className="text-[10px] text-green-600 font-medium">✓ Uploaded</span>}
+                            </div>
                             <input
                               type="file"
-                              onChange={(e) => handleMemberChange(idx, 'docName', e.target.files[0]?.name || '')}
+                              onChange={(e) => handleMemberFileUpload(e, idx)}
                               className="w-full px-2.5 py-1 border border-slate-200 rounded-lg text-xs text-slate-600 bg-white shadow-sm file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
                             />
                           </div>

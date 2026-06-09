@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdClose, MdDownload, MdCheckCircle, MdPending, MdWarning, MdPrint, MdHotel } from 'react-icons/md';
+import { MdClose, MdDownload, MdCheckCircle, MdWarning, MdHotel } from 'react-icons/md';
 import { INVOICE_STATUS } from '../constants/invoiceStatus';
 import ActionButton from '../../../components/ActionButton';
 import { downloadInvoicePDF } from '../services/invoiceDownload.service';

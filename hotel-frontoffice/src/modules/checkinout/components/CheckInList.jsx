@@ -18,7 +18,7 @@ const CheckInList = ({ arrivals, onCheckIn }) => {
         <div className="ops-empty-icon">
           <MdLogin size={32} />
         </div>
-        <p className="text-sm font-bold text-slate-500">No Arrivals Today</p>
+        <p className="text-sm font-bold text-slate-500">No Arrivals Found</p>
         <p className="ops-empty-text">All rooms are quiet. Check back later.</p>
       </div>
     );
@@ -88,7 +88,7 @@ const CheckInList = ({ arrivals, onCheckIn }) => {
             </h3>
             <span className="ops-badge ops-badge-success">{done.length} Done</span>
           </div>
-          {done.map((guest, idx) => (
+          {done.map((guest) => (
             <div key={guest.id} className="ops-guest-row opacity-70">
               <div className="flex items-center gap-4">
                 <div className="ops-guest-avatar bg-emerald-500">

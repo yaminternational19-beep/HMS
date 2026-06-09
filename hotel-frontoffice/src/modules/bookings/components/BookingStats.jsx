@@ -3,12 +3,12 @@ import { MdBookOnline, MdMeetingRoom, MdPeople, MdLogout } from 'react-icons/md'
 import StatsCard from '../../../components/global/stats/StatsCard';
 import StatsGrid from '../../../components/global/stats/StatsGrid';
 
-const BookingStats = ({ data = [] }) => {
-  // Compute booking stats dynamically
-  const total = data.length;
-  const active = data.filter(b => b.status === 'Confirmed' || b.status === 'Checked-In').length;
-  const checkedIn = data.filter(b => b.status === 'Checked-In').reduce((sum, b) => sum + b.totalGuests, 0);
-  const pendingCheckout = data.filter(b => b.status === 'Checked-In' && b.checkOut === '2026-05-18').length;
+const BookingStats = ({ data = [], stats = {} }) => {
+  // Compute booking stats dynamically or use backend pre-calculated stats
+  const total = stats.total !== undefined ? stats.total : data.length;
+  const active = stats.active !== undefined ? stats.active : data.filter(b => b.status === 'Confirmed' || b.status === 'Checked-In').length;
+  const checkedIn = stats.checkedIn !== undefined ? stats.checkedIn : data.filter(b => b.status === 'Checked-In').reduce((sum, b) => sum + b.totalGuests, 0);
+  const pendingCheckout = stats.pendingCheckout !== undefined ? stats.pendingCheckout : data.filter(b => b.status === 'Checked-In' && b.checkOut === '2026-05-18').length;
 
   return (
     <StatsGrid>

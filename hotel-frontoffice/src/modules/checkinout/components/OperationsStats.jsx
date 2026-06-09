@@ -3,29 +3,29 @@ import { MdLogin, MdLogout, MdMeetingRoom, MdPayments } from 'react-icons/md';
 import StatsCard from '../../../components/global/stats/StatsCard';
 import StatsGrid from '../../../components/global/stats/StatsGrid';
 
-const OperationsStats = ({ arrivals, departures }) => {
-  const pendingArrivals = arrivals.filter(a => a.status === 'Pending').length;
-  const checkedIn = arrivals.filter(a => a.status === 'Checked-In').length;
-  const pendingDepartures = departures.filter(d => d.status === 'Pending').length;
-  const pendingCollections = departures
-    .filter(d => d.status === 'Pending' && d.balance > 0)
-    .reduce((sum, d) => sum + d.balance, 0);
+const OperationsStats = ({ stats = {} }) => {
+  const pendingArrivals = stats.pendingArrivals || 0;
+  const checkedIn = stats.pendingDepartures || 0; // Number of in-house guests
+  const pendingDepartures = stats.pendingDepartures || 0;
+  const checkedOut = stats.checkedOut || 0;
+  const pendingCollections = stats.pendingCollections || 0;
+  const guestsWithBalance = stats.guestsWithBalance || 0;
 
   return (
     <StatsGrid>
       <StatsCard
-        title="Arrivals Today"
+        title="Arrivals"
         value={pendingArrivals}
         icon={<MdLogin size={20} />}
         theme="blue"
-        subtitle={`${checkedIn} checked in`}
+        subtitle={`${checkedIn} in-house`}
       />
       <StatsCard
-        title="Departures Today"
+        title="Departures"
         value={pendingDepartures}
         icon={<MdLogout size={20} />}
         theme="amber"
-        subtitle={`${departures.filter(d => d.status === 'Checked-Out').length} checked out`}
+        subtitle={`${checkedOut} checked out`}
       />
       <StatsCard
         title="Available Rooms"
@@ -39,7 +39,7 @@ const OperationsStats = ({ arrivals, departures }) => {
         value={pendingCollections > 0 ? `₹${pendingCollections.toLocaleString()}` : '₹0'}
         icon={<MdPayments size={20} />}
         theme={pendingCollections > 0 ? 'red' : 'emerald'}
-        subtitle={`${departures.filter(d => d.balance > 0).length} guest(s) with balance`}
+        subtitle={`${guestsWithBalance} guest(s) with balance`}
       />
     </StatsGrid>
   );

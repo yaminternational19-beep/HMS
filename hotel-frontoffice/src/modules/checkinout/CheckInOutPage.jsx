@@ -1,63 +1,171 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import OperationsStats from './components/OperationsStats';
 import CheckInList from './components/CheckInList';
 import CheckOutList from './components/CheckOutList';
-import { TODAY_ARRIVALS, TODAY_DEPARTURES } from '../../mockdata/frontdesk.mock';
+import { getBookingsList, updateBooking, getBookingPayslip } from '../../api/booking';
+import { exportPayslipToPDF } from '../bookings/services/bookingExport.service';
 import { useToastStore } from '../../store/useToastStore';
 import { MdLogin, MdLogout } from 'react-icons/md';
 import Pagination from '../../components/Pagination';
+import { Loader2 } from 'lucide-react';
 import './styles/checkinout.css';
 
 const CheckInOutPage = () => {
   const [activeTab, setActiveTab] = useState('checkin');
-  const [arrivals, setArrivals] = useState(TODAY_ARRIVALS);
-  const [departures, setDepartures] = useState(TODAY_DEPARTURES);
+  const [arrivals, setArrivals] = useState([]);
+  const [departures, setDepartures] = useState([]);
+  const [totalArrivalsItems, setTotalArrivalsItems] = useState(0);
+  const [totalDeparturesItems, setTotalDeparturesItems] = useState(0);
+  const [pendingArrivals, setPendingArrivals] = useState(0);
+  const [pendingDepartures, setPendingDepartures] = useState(0);
+  const [apiStats, setApiStats] = useState({});
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
   const addToast = useToastStore((state) => state.addToast);
 
-  const pendingArrivals = arrivals.filter(a => a.status === 'Pending').length;
-  const pendingDepartures = departures.filter(d => d.status === 'Pending').length;
+  const fetchOpsData = async () => {
+    setLoading(true);
+    try {
+      if (activeTab === 'checkin') {
+        const response = await getBookingsList({
+          status: 'Confirmed,Pending,Checked-In',
+          page: currentPage,
+          limit: itemsPerPage
+        });
+        if (response && response.success) {
+          const bookings = response.data.bookings || [];
+          const arrivalsMapped = bookings.map(b => {
+            const raw = b.raw || b.rawData || {};
+            const adv = parseFloat(raw.paymentDetails?.advancePaid || 0);
+            const amt = parseFloat(b.amount || 0);
+            return {
+              id: b.bookingCode,
+              guestName: b.guestName,
+              phone: b.phone,
+              roomType: b.roomType,
+              assignedRoom: b.roomNumber,
+              eta: raw.bookingDetails?.expectedArrival ? new Date(raw.bookingDetails.expectedArrival).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) : '12:00',
+              status: b.status === 'Checked-In' ? 'Checked-In' : 'Pending',
+              balance: Math.max(0, amt - adv),
+              isVIP: raw.bookingDetails?.purposeOfVisit === 'Business',
+              raw: b
+            };
+          });
+          setArrivals(arrivalsMapped);
+          setTotalArrivalsItems(response.data.pagination?.totalItems || 0);
+          if (response.data.stats) {
+            setApiStats(response.data.stats);
+            setPendingArrivals(response.data.stats.pendingArrivals || 0);
+            setPendingDepartures(response.data.stats.pendingDepartures || 0);
+          }
+        }
+      } else {
+        const response = await getBookingsList({
+          status: 'Checked-In,Checked-Out',
+          page: currentPage,
+          limit: itemsPerPage
+        });
+        if (response && response.success) {
+          const bookings = response.data.bookings || [];
+          const departuresMapped = bookings.map(b => {
+            const raw = b.raw || b.rawData || {};
+            const adv = parseFloat(raw.paymentDetails?.advancePaid || 0);
+            const amt = parseFloat(b.amount || 0);
+            return {
+              id: b.bookingCode,
+              guestName: b.guestName,
+              roomNumber: b.roomNumber,
+              roomType: b.roomType,
+              checkOutDate: b.checkOut,
+              balance: Math.max(0, amt - adv),
+              status: b.status === 'Checked-Out' ? 'Checked-Out' : 'Pending',
+              raw: b
+            };
+          });
+          setDepartures(departuresMapped);
+          setTotalDeparturesItems(response.data.pagination?.totalItems || 0);
+          if (response.data.stats) {
+            setApiStats(response.data.stats);
+            setPendingArrivals(response.data.stats.pendingArrivals || 0);
+            setPendingDepartures(response.data.stats.pendingDepartures || 0);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load operations data:', err);
+      addToast('Failed to load check-in/check-out directory.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Format today's date nicely
-  const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
+  useEffect(() => {
+    fetchOpsData();
+  }, [activeTab, currentPage]);
+
+  const totalArrivalsPages = Math.ceil(totalArrivalsItems / itemsPerPage);
+  const totalDeparturesPages = Math.ceil(totalDeparturesItems / itemsPerPage);
+
+  useEffect(() => {
+    if (activeTab === 'checkin' && currentPage > totalArrivalsPages && totalArrivalsPages > 0) {
+      setCurrentPage(totalArrivalsPages);
+    } else if (activeTab === 'checkout' && currentPage > totalDeparturesPages && totalDeparturesPages > 0) {
+      setCurrentPage(totalDeparturesPages);
+    }
+  }, [totalArrivalsItems, totalDeparturesItems, activeTab, currentPage, totalArrivalsPages, totalDeparturesPages]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
   };
 
-  // Pagination slicing
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentArrivals = arrivals.slice(indexOfFirstItem, indexOfLastItem);
-  const currentDepartures = departures.slice(indexOfFirstItem, indexOfLastItem);
+  const today = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
 
-  const handleCheckIn = (guest) => {
-    addToast(`Processing Check-In for ${guest.guestName}...`, 'info');
-    setTimeout(() => {
-      setArrivals(prev =>
-        prev.map(a => a.id === guest.id ? { ...a, status: 'Checked-In' } : a)
-      );
-      addToast(`${guest.guestName} successfully checked in to Room ${guest.assignedRoom}!`, 'success');
-    }, 800);
+  const handleCheckIn = async (guest) => {
+    try {
+      const response = await updateBooking(guest.id, { status: 'Checked-In' });
+      if (response && response.success) {
+        addToast(`${guest.guestName} successfully checked in to Room ${guest.assignedRoom}!`, 'success');
+        fetchOpsData();
+      }
+    } catch (error) {
+      console.error('Failed to check in:', error);
+      const errorMsg = error?.response?.data?.message || 'Failed to process Check-In.';
+      addToast(errorMsg, 'error');
+    }
   };
 
-  const handleCheckOut = (guest) => {
+  const handleCheckOut = async (guest) => {
     if (guest.balance > 0) {
       addToast(`Cannot check-out ${guest.guestName} — outstanding balance of ₹${guest.balance.toLocaleString()}. Please clear billing first.`, 'error');
       return;
     }
-    addToast(`Processing Check-Out for ${guest.guestName}...`, 'info');
-    setTimeout(() => {
-      setDepartures(prev =>
-        prev.map(d => d.id === guest.id ? { ...d, status: 'Checked-Out' } : d)
-      );
-      addToast(`${guest.guestName} has been successfully checked out. Room ${guest.roomNumber} is now queued for housekeeping.`, 'success');
-    }, 800);
+    try {
+      const response = await updateBooking(guest.id, { status: 'Checked-Out' });
+      if (response && response.success) {
+        addToast(`${guest.guestName} has been successfully checked out. Room ${guest.roomNumber} is now queued for housekeeping.`, 'success');
+        
+        // Auto-download payslip
+        try {
+          const payslipResponse = await getBookingPayslip(guest.id);
+          if (payslipResponse && payslipResponse.success) {
+            exportPayslipToPDF(payslipResponse.data);
+          }
+        } catch (pdfErr) {
+          console.error('Failed to generate automatic invoice:', pdfErr);
+        }
+
+        fetchOpsData();
+      }
+    } catch (error) {
+      console.error('Failed to check out:', error);
+      const errorMsg = error?.response?.data?.message || 'Failed to process Check-Out.';
+      addToast(errorMsg, 'error');
+    }
   };
 
   return (
@@ -67,13 +175,13 @@ const CheckInOutPage = () => {
       <div className="ops-header">
         <div>
           <h1 className="ops-title">Guest Check-In / Check-Out</h1>
-          <p className="ops-subtitle">Manage today's arrivals and departures in real time.</p>
+          <p className="ops-subtitle">Manage arrivals and departures in real time.</p>
         </div>
         <span className="ops-date-badge">{today}</span>
       </div>
 
       {/* Stats */}
-      <OperationsStats arrivals={arrivals} departures={departures} />
+      <OperationsStats stats={apiStats} />
 
       {/* Tabbed Workspace */}
       <div className="ops-workspace">
@@ -104,12 +212,17 @@ const CheckInOutPage = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'checkin' ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <Loader2 size={32} className="text-indigo-600 animate-spin mb-2 animate-duration-1000" />
+            <p className="text-slate-500 text-sm font-medium">Loading operations directory...</p>
+          </div>
+        ) : activeTab === 'checkin' ? (
           <>
-            <CheckInList arrivals={currentArrivals} onCheckIn={handleCheckIn} />
+            <CheckInList arrivals={arrivals} onCheckIn={handleCheckIn} />
             <Pagination
               currentPage={currentPage}
-              totalItems={arrivals.length}
+              totalItems={totalArrivalsItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
               itemName="arrivals"
@@ -117,10 +230,10 @@ const CheckInOutPage = () => {
           </>
         ) : (
           <>
-            <CheckOutList departures={currentDepartures} onCheckOut={handleCheckOut} />
+            <CheckOutList departures={departures} onCheckOut={handleCheckOut} />
             <Pagination
               currentPage={currentPage}
-              totalItems={departures.length}
+              totalItems={totalDeparturesItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
               itemName="departures"

@@ -1,0 +1,1 @@
+# apps/frontoffice/dashboard package

@@ -18,8 +18,8 @@ const CheckOutList = ({ departures, onCheckOut }) => {
         <div className="ops-empty-icon">
           <MdLogout size={32} />
         </div>
-        <p className="text-sm font-bold text-slate-500">No Departures Today</p>
-        <p className="ops-empty-text">No guests are scheduled to leave today.</p>
+        <p className="text-sm font-bold text-slate-500">No Departures Found</p>
+        <p className="ops-empty-text">No guest departures found.</p>
       </div>
     );
   }

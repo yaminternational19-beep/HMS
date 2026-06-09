@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdCheckCircle, MdPending, MdWarning, MdCancel, MdHourglassEmpty, MdVisibility } from 'react-icons/md';
+import { MdCheckCircle, MdPending, MdWarning, MdCancel, MdHourglassEmpty, MdVisibility, MdReceipt } from 'react-icons/md';
 import { INVOICE_STATUS } from '../constants/invoiceStatus';
 import ActionButton from '../../../components/ActionButton';
 import '../styles/invoices.css';

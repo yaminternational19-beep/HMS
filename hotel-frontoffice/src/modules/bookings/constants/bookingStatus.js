@@ -13,9 +13,11 @@ export const PAYMENT_STATUS = {
 };
 
 export const ROOM_TYPES = [
-  'Standard',
+  'Single',
+  'Double',
   'Deluxe',
-  'Suite',
-  'Presidential Suite',
-  'Family Room'
+  'Super Deluxe',
+  'Family Suite',
+  'Presidential Suite'
 ];
+
