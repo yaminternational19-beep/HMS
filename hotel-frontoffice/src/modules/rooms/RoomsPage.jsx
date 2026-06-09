@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { MOCK_ROOMS } from './services/room.service';
+import React, { useState, useEffect } from 'react';
+import { getRoomsAndStats, updateRoomStatus } from '../../api/rooms';
 import RoomFilters from './components/RoomFilters';
 import RoomGrid from './components/RoomGrid';
 import { ROOM_STATUS } from './constants/roomStatus';
@@ -17,7 +17,8 @@ import {
   ChefHat,
   Flower2,
   Car,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import './styles/rooms.css';
 
@@ -38,19 +39,48 @@ const AMENITY_ICONS = {
 };
 
 const RoomsPage = () => {
-  const [rooms, setRooms] = useState(MOCK_ROOMS);
   const addToast = useToastStore((state) => state.addToast);
 
-  // States for updating status
+  // Dynamic state populated from APIs
+  const [rooms, setRooms] = useState([]);
+  const [stats, setStats] = useState({ total: 0, available: 0, occupied: 0, maintenance: 0 });
+  const [loading, setLoading] = useState(true);
+
+  // States for updating status modal
   const [updatingRoom, setUpdatingRoom] = useState(null);
   const [newStatus, setNewStatus] = useState('');
+  const [saving, setSaving] = useState(false);
 
+  // Filters state
   const [filters, setFilters] = useState({
     search: '',
     type: 'All',
     status: 'All',
     floor: 'All'
   });
+
+  // Fetch rooms list and stats from backend
+  const fetchRooms = async (showSilently = false) => {
+    if (!showSilently) setLoading(true);
+    try {
+      const response = await getRoomsAndStats(filters);
+      if (response && response.success) {
+        setRooms(response.data.rooms || []);
+        setStats(response.data.stats || { total: 0, available: 0, occupied: 0, maintenance: 0 });
+      }
+    } catch (error) {
+      console.error('Failed to load room inventory:', error);
+      const errorMsg = error?.response?.data?.message || 'Failed to connect to backend room inventory services.';
+      addToast(errorMsg, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Trigger fetch whenever filters change
+  useEffect(() => {
+    fetchRooms();
+  }, [filters]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -71,51 +101,26 @@ const RoomsPage = () => {
     setNewStatus(room.status);
   };
 
-  const handleSaveStatus = () => {
+  const handleSaveStatus = async () => {
     if (!updatingRoom) return;
+    setSaving(true);
 
-    setRooms(prevRooms => 
-      prevRooms.map(r => 
-        r.id === updatingRoom.id 
-          ? { 
-              ...r, 
-              status: newStatus,
-              guestName: newStatus === ROOM_STATUS.OCCUPIED ? (r.guestName || 'In-House Guest') : null,
-              cleaningStaff: newStatus === ROOM_STATUS.CLEANING ? (r.cleaningStaff || 'Maria S.') : null
-            } 
-          : r
-      )
-    );
-
-    addToast(`Room ${updatingRoom.roomNumber} status successfully updated to ${newStatus}.`, 'success');
-    setUpdatingRoom(null);
+    try {
+      const response = await updateRoomStatus(updatingRoom.roomNumber, newStatus);
+      if (response && response.success) {
+        addToast(`Room ${updatingRoom.roomNumber} status successfully updated to ${newStatus}.`, 'success');
+        setUpdatingRoom(null);
+        // Silently reload the rooms and stats list to avoid layout flashing
+        fetchRooms(true);
+      }
+    } catch (error) {
+      console.error('Failed to update room status:', error);
+      const errorMsg = error?.response?.data?.message || `Failed to update status of Room ${updatingRoom.roomNumber}.`;
+      addToast(errorMsg, 'error');
+    } finally {
+      setSaving(false);
+    }
   };
-
-  // Filter Logic
-  const filteredRooms = useMemo(() => {
-    return rooms.filter(room => {
-      // Search by room number or guest name
-      const matchesSearch = 
-        room.roomNumber.toLowerCase().includes(filters.search.toLowerCase()) ||
-        (room.guestName && room.guestName.toLowerCase().includes(filters.search.toLowerCase()));
-
-      const matchesType = filters.type === 'All' || room.type === filters.type;
-      const matchesStatus = filters.status === 'All' || room.status === filters.status;
-      const matchesFloor = filters.floor === 'All' || room.floor.includes(filters.floor.replace('st','').replace('nd','').replace('rd','').replace('th',''));
-
-      return matchesSearch && matchesType && matchesStatus && matchesFloor;
-    });
-  }, [rooms, filters]);
-
-  // Aggregate stats
-  const stats = useMemo(() => {
-    const total = rooms.length;
-    const available = rooms.filter(r => r.status === 'Available').length;
-    const occupied = rooms.filter(r => r.status === 'Occupied').length;
-    const maintenance = rooms.filter(r => r.status === 'Under Maintenance').length;
-    
-    return { total, available, occupied, maintenance };
-  }, [rooms]);
 
   return (
     <div className="rooms-page-container animate-fade-in">
@@ -155,17 +160,34 @@ const RoomsPage = () => {
           onReset={handleReset}
         />
         
-        <div className="rooms-workspace-grid-area">
-          <RoomGrid 
-            rooms={filteredRooms}
-            onRoomClick={handleRoomClick}
-          />
+        <div className="rooms-workspace-grid-area relative min-h-[300px]">
+          {loading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 rounded-xl">
+              <Loader2 size={36} className="text-indigo-600 animate-spin mb-2" />
+              <p className="text-slate-500 font-medium text-sm">Fetching room inventory...</p>
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/30 rounded-xl border border-dashed border-slate-200 p-8">
+              <p className="text-slate-400 font-medium text-base">No rooms match the current search filters.</p>
+              <button 
+                onClick={handleReset} 
+                className="mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition"
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <RoomGrid 
+              rooms={rooms}
+              onRoomClick={handleRoomClick}
+            />
+          )}
         </div>
       </div>
 
       {/* Status Update Modal */}
       {updatingRoom && (
-        <div className="status-modal-overlay" onClick={() => setUpdatingRoom(null)}>
+        <div className="status-modal-overlay" onClick={() => !saving && setUpdatingRoom(null)}>
           <div className="status-modal-container !max-w-md animate-slide-up" onClick={(e) => e.stopPropagation()}>
             
             {/* Rich cover thumbnail header area */}
@@ -180,9 +202,10 @@ const RoomsPage = () => {
                   {updatingRoom.floor.replace('Floor', '')}F
                 </span>
                 <button 
-                  onClick={() => setUpdatingRoom(null)} 
+                  onClick={() => !saving && setUpdatingRoom(null)} 
                   className="status-modal-close"
                   title="Close Modal"
+                  disabled={saving}
                 >
                   ×
                 </button>
@@ -202,7 +225,7 @@ const RoomsPage = () => {
                   <Info size={11} className="booking-modal-label-icon" />
                   <span>Promotional Description</span>
                 </label>
-                <p className="booking-modal-section-text">{updatingRoom.description}</p>
+                <p className="booking-modal-section-text">{updatingRoom.description || 'No description provided.'}</p>
               </div>
 
               {/* Specifications detailed grid */}
@@ -224,6 +247,21 @@ const RoomsPage = () => {
                   <span className="spec-details-value">₹{updatingRoom.price.toLocaleString('en-IN')}/night</span>
                 </div>
               </div>
+
+              {/* Occupied Guest and Cleaning Staff Details (Dynamic) */}
+              {updatingRoom.guestName && (
+                <div className="booking-modal-section border-t border-slate-100 pt-3 mt-1">
+                  <label className="spec-details-label">In-House Guest</label>
+                  <span className="text-slate-900 font-semibold text-sm">{updatingRoom.guestName}</span>
+                </div>
+              )}
+
+              {updatingRoom.cleaningStaff && (
+                <div className="booking-modal-section border-t border-slate-100 pt-3 mt-1">
+                  <label className="spec-details-label">Housekeeper Assigned</label>
+                  <span className="text-slate-900 font-semibold text-sm">{updatingRoom.cleaningStaff}</span>
+                </div>
+              )}
 
               {/* Lodging Utilities & Amenities badged grid */}
               <div className="booking-modal-section-spaced">
@@ -249,6 +287,7 @@ const RoomsPage = () => {
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="status-select-dropdown"
+                  disabled={saving}
                 >
                   {Object.values(ROOM_STATUS).map((statusVal) => (
                     <option key={statusVal} value={statusVal}>
@@ -263,16 +302,25 @@ const RoomsPage = () => {
             {/* Save/Cancel Footer */}
             <div className="status-modal-footer">
               <button
-                onClick={() => setUpdatingRoom(null)}
+                onClick={() => !saving && setUpdatingRoom(null)}
                 className="status-btn-cancel"
+                disabled={saving}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveStatus}
-                className="status-btn-save"
+                className="status-btn-save flex items-center justify-center"
+                disabled={saving}
               >
-                Save Status Changes
+                {saving ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin mr-1.5" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Save Status Changes</span>
+                )}
               </button>
             </div>
           </div>
