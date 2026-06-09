@@ -1,12 +1,6 @@
 import axiosInstance from './axiosInstance';
 
-/**
- * Fetch bookings list from the backend frontoffice bookings API.
- * Supports filters: search, roomType, status.
- * 
- * @param {Object} filters - Search and dropdown filters.
- * @returns {Promise<Object>} - API success response containing bookings list.
- */
+
 export const getBookingsList = async (filters = {}) => {
   const params = {};
   
@@ -16,7 +10,7 @@ export const getBookingsList = async (filters = {}) => {
   if (filters.page) params.page = filters.page;
   if (filters.limit) params.limit = filters.limit;
 
-  return axiosInstance.get('/frontoffice/checkin-checkout/', { params });
+  return axiosInstance.get('/frontoffice/bookings/', { params });
 };
 
 /**
@@ -26,7 +20,7 @@ export const getBookingsList = async (filters = {}) => {
  * @returns {Promise<Object>} - API success response containing the registered booking details.
  */
 export const createBooking = async (bookingData) => {
-  return axiosInstance.post('/frontoffice/checkin-checkout/', bookingData);
+  return axiosInstance.post('/frontoffice/bookings/', bookingData);
 };
 
 /**
@@ -37,7 +31,7 @@ export const createBooking = async (bookingData) => {
  * @returns {Promise<Object>} - API success response containing the updated booking details.
  */
 export const updateBooking = async (bookingCode, bookingData) => {
-  return axiosInstance.put(`/frontoffice/checkin-checkout/${bookingCode}/`, bookingData);
+  return axiosInstance.put(`/frontoffice/bookings/${bookingCode}/`, bookingData);
 };
 
 /**
@@ -47,7 +41,7 @@ export const updateBooking = async (bookingCode, bookingData) => {
  * @returns {Promise<Object>} - API success response containing invoice/payslip details.
  */
 export const getBookingPayslip = async (bookingCode) => {
-  return axiosInstance.get(`/frontoffice/checkin-checkout/${bookingCode}/payslip/`);
+  return axiosInstance.get(`/frontoffice/bookings/${bookingCode}/payslip/`);
 };
 
 /**
@@ -59,7 +53,7 @@ export const getBookingPayslip = async (bookingCode) => {
 export const uploadBookingDocument = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  return axiosInstance.post('/frontoffice/checkin-checkout/upload/', formData, {
+  return axiosInstance.post('/frontoffice/bookings/upload/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -72,7 +66,7 @@ export const uploadBookingDocument = async (file) => {
  * @returns {Promise<Object>} - API success response containing the mapped invoices.
  */
 export const getInvoicesList = async () => {
-  return axiosInstance.get('/frontoffice/checkin-checkout/invoices/');
+  return axiosInstance.get('/frontoffice/bookings/invoices/');
 };
 
 /**

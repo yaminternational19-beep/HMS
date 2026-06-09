@@ -25,7 +25,7 @@ urlpatterns = [
     path('api/shifts/', include('apps.superadmin.shifts.urls')),
     path('api/staff/', include('apps.superadmin.staff.urls')),
     path('api/frontoffice/rooms/', include('apps.frontoffice.rooms.urls')),
-    path('api/frontoffice/checkin-checkout/', include('apps.frontoffice.booking.urls')),
+    path('api/frontoffice/bookings/', include('apps.frontoffice.booking.urls')),
     path('api/frontoffice/dashboard/', include('apps.frontoffice.dashboard.urls')),
 ]
 
