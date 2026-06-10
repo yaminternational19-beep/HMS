@@ -58,4 +58,21 @@ def exempt_check(request):
         message="exempt testing",
         data={}
     )
+
+import cloudinary
+from cloudinary.api import ping
+
+@api_view(['GET'])
+def cloudinary_check(request):
+    try:
+        response = ping()
+        return success_response(
+            message="Cloudinary connection successful",
+            data={"response": response}
+        )
+    except Exception as e:
+        return error_response(
+            message=f"Cloudinary connection failed: {str(e)}",
+            data={}
+        )
 
