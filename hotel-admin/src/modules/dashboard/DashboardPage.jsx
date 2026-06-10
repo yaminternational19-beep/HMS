@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   Bed, 
@@ -10,102 +10,57 @@ import {
   Award,
   BellRing
 } from 'lucide-react';
+import { getSuperadminDashboard } from '../../api/dashboard';
 
-const stats = [
-  {
-    label: 'Total Revenue (YTD)',
-    value: '$148,920.00',
-    change: '+14.2% vs last month',
-    trend: 'up',
-    icon: <DollarSign size={20} className="text-emerald-600" />,
-    bg: 'bg-emerald-50 border-emerald-100',
-  },
-  {
-    label: 'Average Occupancy',
-    value: '78.4%',
-    change: '+4.1% vs last week',
-    trend: 'up',
-    icon: <Percent size={20} className="text-blue-600" />,
-    bg: 'bg-blue-50 border-blue-100',
-  },
-  {
-    label: 'Active Bookings',
-    value: '42 Active',
-    change: '8 scheduled today',
-    trend: 'up',
-    icon: <Bed size={20} className="text-amber-600" />,
-    bg: 'bg-amber-50 border-amber-100',
-  },
-  {
-    label: 'Staff on Shift',
-    value: '18 / 24 Staff',
-    change: '3 departments active',
-    trend: 'neutral',
-    icon: <Users size={20} className="text-purple-600" />,
-    bg: 'bg-purple-50 border-purple-100',
-  },
-];
+const getIconForType = (type) => {
+  switch(type) {
+    case 'revenue': return <DollarSign size={20} className="text-emerald-600" />;
+    case 'occupancy': return <Percent size={20} className="text-blue-600" />;
+    case 'bookings': return <Bed size={20} className="text-amber-600" />;
+    case 'staff': return <Users size={20} className="text-purple-600" />;
+    default: return <Award size={20} className="text-slate-600" />;
+  }
+};
 
-const urgentAlerts = [
-  {
-    id: 1,
-    title: 'Room 304 - Maintenance Required',
-    desc: 'HVAC system reported thermal regulation issues.',
-    time: '20 mins ago',
-    type: 'critical',
-  },
-  {
-    id: 2,
-    title: 'High Occupancy Alert',
-    desc: 'Weekend occupancy projected at 98.2%. Shift adjustments suggested.',
-    time: '2 hours ago',
-    type: 'warning',
-  },
-  {
-    id: 3,
-    title: 'VIP Guest Arrival - Suite 502',
-    desc: 'Ambassador John Doe arriving at 16:30. Ensure amenities checked.',
-    time: '4 hours ago',
-    type: 'info',
-  },
-];
-
-const recentActivity = [
-  {
-    id: 'TXN-1082',
-    guest: 'Sophia Loren',
-    room: 'Deluxe Suit 402',
-    amount: '$1,240.00',
-    status: 'paid',
-    date: 'Today, 14:22',
-  },
-  {
-    id: 'TXN-1081',
-    guest: 'Liam Neeson',
-    room: 'Classic King 208',
-    amount: '$650.00',
-    status: 'partial',
-    date: 'Today, 11:05',
-  },
-  {
-    id: 'TXN-1080',
-    guest: 'Clint Eastwood',
-    room: 'Executive Suite 501',
-    amount: '$2,100.00',
-    status: 'paid',
-    date: 'Yesterday, 18:30',
-  },
-  {
-    id: 'TXN-1079',
-    guest: 'Meryl Streep',
-    room: 'Classic Queen 105',
-    amount: '$480.00',
-    status: 'unpaid',
-    date: 'Yesterday, 14:15',
-  },
-];
+const getBgForType = (type) => {
+  switch(type) {
+    case 'revenue': return 'bg-emerald-50 border-emerald-100';
+    case 'occupancy': return 'bg-blue-50 border-blue-100';
+    case 'bookings': return 'bg-amber-50 border-amber-100';
+    case 'staff': return 'bg-purple-50 border-purple-100';
+    default: return 'bg-slate-50 border-slate-100';
+  }
+};
 
 const DashboardPage = () => {
+  const [stats, setStats] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [urgentAlerts, setUrgentAlerts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setIsLoading(true);
+        const res = await getSuperadminDashboard();
+        if (res && res.status === 'success') {
+          setStats(res.data.stats);
+          setRecentActivity(res.data.recentActivity);
+          setUrgentAlerts(res.data.urgentAlerts);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-500 font-medium">Loading Dashboard Core...</div>;
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       
@@ -124,7 +79,7 @@ const DashboardPage = () => {
               Welcome back to Admin Core, Praveen
             </h2>
             <p className="text-sm text-slate-400 max-w-xl">
-              Systems are running optimally. You have 3 urgent maintenance alerts and a VIP arrival scheduled for late afternoon.
+              Systems are running optimally. You have {urgentAlerts.length} urgent alerts scheduled for today.
             </p>
           </div>
           
@@ -144,15 +99,17 @@ const DashboardPage = () => {
           >
             <div className="flex justify-between items-start">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</span>
-              <div className={`p-2.5 rounded-xl border ${stat.bg}`}>
-                {stat.icon}
+              <div className={`p-2.5 rounded-xl border ${getBgForType(stat.type)}`}>
+                {getIconForType(stat.type)}
               </div>
             </div>
             <div className="mt-4">
               <span className="text-2xl font-extrabold text-slate-800 tracking-tight">{stat.value}</span>
               <div className="flex items-center gap-1 mt-1 text-xs font-semibold text-slate-500">
-                <TrendingUp size={12} className="text-emerald-500 shrink-0" />
-                <span className="text-emerald-600">{stat.change.split(' ')[0]}</span>
+                {stat.trend === 'up' && <TrendingUp size={12} className="text-emerald-500 shrink-0" />}
+                <span className={stat.trend === 'up' ? "text-emerald-600" : "text-slate-500"}>
+                  {stat.change.split(' ')[0]}
+                </span>
                 <span className="text-slate-400 font-medium">{stat.change.substring(stat.change.indexOf(' '))}</span>
               </div>
             </div>
@@ -187,26 +144,32 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentActivity.map((act) => (
-                  <tr key={act.id}>
-                    <td>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs">
-                          {act.guest.split(' ').map(n=>n[0]).join('')}
-                        </div>
-                        <span className="font-semibold text-slate-800 text-sm">{act.guest}</span>
-                      </div>
-                    </td>
-                    <td className="text-slate-500 text-sm">{act.room}</td>
-                    <td className="text-slate-400 text-xs font-mono font-medium">{act.id}</td>
-                    <td className="font-bold text-slate-800 text-sm">{act.amount}</td>
-                    <td>
-                      <span className={`status-tag status-tag-${act.status}`}>
-                        {act.status}
-                      </span>
-                    </td>
+                {recentActivity.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center text-slate-500 py-4">No recent transactions.</td>
                   </tr>
-                ))}
+                ) : (
+                  recentActivity.map((act) => (
+                    <tr key={act.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
+                            {act.guest ? act.guest.split(' ').map(n=>n[0]).join('').substring(0,2) : '?'}
+                          </div>
+                          <span className="font-semibold text-slate-800 text-sm">{act.guest || 'Unknown'}</span>
+                        </div>
+                      </td>
+                      <td className="text-slate-500 text-sm">{act.room}</td>
+                      <td className="text-slate-400 text-xs font-mono font-medium">{act.id}</td>
+                      <td className="font-bold text-slate-800 text-sm">{act.amount}</td>
+                      <td>
+                        <span className={`status-tag status-tag-${act.status}`}>
+                          {act.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -223,31 +186,35 @@ const DashboardPage = () => {
                 <h3 className="text-base font-bold text-slate-800">Critical Notifications</h3>
               </div>
               <span className="h-5 px-2 rounded-full bg-red-100 text-red-700 text-[10px] font-bold flex items-center justify-center">
-                3 Pending
+                {urgentAlerts.length} Pending
               </span>
             </div>
 
             <div className="space-y-4">
-              {urgentAlerts.map((alert) => (
-                <div 
-                  key={alert.id}
-                  className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
-                >
-                  <div className="mt-0.5 shrink-0">
-                    <span className={`h-2.5 w-2.5 rounded-full block ${
-                      alert.type === 'critical' ? 'bg-red-500' : alert.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                    }`}></span>
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-slate-800 leading-tight">{alert.title}</h4>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">{alert.desc}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-1 font-semibold">
-                      <Clock size={10} />
-                      <span>{alert.time}</span>
+              {urgentAlerts.length === 0 ? (
+                <div className="text-sm text-slate-500 text-center py-2">No urgent alerts.</div>
+              ) : (
+                urgentAlerts.map((alert) => (
+                  <div 
+                    key={alert.id}
+                    className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      <span className={`h-2.5 w-2.5 rounded-full block ${
+                        alert.type === 'critical' ? 'bg-red-500' : alert.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+                      }`}></span>
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-slate-800 leading-tight">{alert.title}</h4>
+                      <p className="text-xs text-slate-400 leading-relaxed font-medium">{alert.desc}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-1 font-semibold">
+                        <Clock size={10} />
+                        <span>{alert.time}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

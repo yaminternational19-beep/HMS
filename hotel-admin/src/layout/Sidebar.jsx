@@ -22,7 +22,7 @@ const navLinks = [
   { label: 'Staff Management', path: '/staff', icon: <Users size={20} /> },
   { label: 'Staff Logs', path: '/staff-logs', icon: <Activity size={20} /> },
   { label: 'Bookings', path: '/bookings', icon: <CalendarRange size={20} /> },
-  { label: 'Reports & Stats', path: '/reports', icon: <BarChart3 size={20} /> },
+  // { label: 'Reports & Stats', path: '/reports', icon: <BarChart3 size={20} /> },
 ];
 
 const Sidebar = () => {

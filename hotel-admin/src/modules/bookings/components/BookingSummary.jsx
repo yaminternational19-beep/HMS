@@ -1,11 +1,11 @@
 import React from 'react';
 import { MdTrendingUp } from 'react-icons/md';
 
-const BookingSummary = ({ data = [] }) => {
-  // Compute counts
-  const arrivals = data.filter(b => b.checkIn === '2026-05-18' && b.status !== 'Cancelled').length;
-  const departures = data.filter(b => b.checkOut === '2026-05-18' && b.status !== 'Cancelled').length;
-  const reserved = data.filter(b => b.status === 'Confirmed').length;
+const BookingSummary = ({ stats = {} }) => {
+  // Use counts from backend stats
+  const arrivals = stats.arrivals || 0;
+  const departures = stats.departures || 0;
+  const reserved = stats.reserved || 0;
 
   const cards = [
     { title: "Today's Arrivals", count: arrivals, unit: 'guests expected', badge: 'Today', note: 'Direct bookings', trend: '90% check-in rate' },

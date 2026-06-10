@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { bookings as mockBookings } from './mockdata/bookings.mock';
+import React, { useState, useEffect } from 'react';
 import BookingStats from './components/BookingStats';
 import BookingSummary from './components/BookingSummary';
 import BookingFilters from './components/BookingFilters';
@@ -7,11 +6,14 @@ import BookingTable from './components/BookingTable';
 import Pagination from '../../components/Pagination';
 import { exportToPDF, exportToExcel } from './services/bookingExport.service';
 import { MdVisibility } from 'react-icons/md';
+import { getSuperadminBookings } from '../../api/bookings';
 import './styles/bookings.css';
 
 const BookingsPage = () => {
-  // Master read-only data state
-  const [allBookings] = useState(mockBookings);
+  // Master data state
+  const [bookings, setBookings] = useState([]);
+  const [stats, setStats] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filters states
   const [filters, setFilters] = useState({
@@ -22,6 +24,7 @@ const BookingsPage = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
   // Selected records for batch export
@@ -40,6 +43,37 @@ const BookingsPage = () => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
   };
+
+  // Fetch Data from Server
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getSuperadminBookings({
+        page: currentPage,
+        page_size: itemsPerPage,
+        search: filters.search,
+        roomType: filters.roomType,
+        status: filters.status
+      });
+      
+      if (response && response.status === 'success') {
+        setBookings(response.data);
+        setStats(response.stats);
+        setTotalItems(response.pagination.totalItems);
+      } else {
+        addToast('Failed to retrieve bookings data.', 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      addToast('Error fetching data. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, [currentPage, filters]);
 
   // Filter handlers
   const handleFilterChange = (key, value) => {
@@ -65,28 +99,9 @@ const BookingsPage = () => {
     setViewingBooking(booking);
   };
 
-  // Filter logic matching frontoffice behavior
-  const filteredBookings = allBookings.filter((booking) => {
-    const matchesSearch =
-      booking.guestName.toLowerCase().includes((filters.search || '').toLowerCase()) ||
-      booking.id.toLowerCase().includes((filters.search || '').toLowerCase()) ||
-      booking.phone.includes(filters.search || '');
-
-    const matchesRoomType = filters.roomType === 'All' || booking.roomType === filters.roomType;
-    const matchesStatus = filters.status === 'All' || booking.status === filters.status;
-
-    return matchesSearch && matchesRoomType && matchesStatus;
-  });
-
-  // Pagination calculations
-  const totalItems = filteredBookings.length;
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
-
   // Selection helpers
-  const currentItemIds = currentItems.map((item) => item.id);
-  const isAllSelected = currentItems.length > 0 && currentItemIds.every((id) => selectedIds.includes(id));
+  const currentItemIds = bookings.map((item) => item.id);
+  const isAllSelected = bookings.length > 0 && currentItemIds.every((id) => selectedIds.includes(id));
 
   const handleToggleSelectAll = () => {
     if (isAllSelected) {
@@ -120,10 +135,10 @@ const BookingsPage = () => {
       </div>
 
       {/* 2. Stats Section */}
-      <BookingStats data={allBookings} />
+      <BookingStats stats={stats} />
 
       {/* 3. Booking Summaries */}
-      <BookingSummary data={allBookings} />
+      <BookingSummary stats={stats} />
 
       {/* 4. Unified Workspace (Filters + Table + Pagination) */}
       <div className="booking-workspace-container">
@@ -137,7 +152,7 @@ const BookingsPage = () => {
               addToast('Please select data from the list before exporting.', 'warning');
               return;
             }
-            const dataToExport = allBookings.filter((b) => selectedIds.includes(b.id));
+            const dataToExport = bookings.filter((b) => selectedIds.includes(b.id));
             exportToPDF(dataToExport, addToast);
           }}
           onExportExcel={() => {
@@ -145,21 +160,25 @@ const BookingsPage = () => {
               addToast('Please select data from the list before exporting.', 'warning');
               return;
             }
-            const dataToExport = allBookings.filter((b) => selectedIds.includes(b.id));
+            const dataToExport = bookings.filter((b) => selectedIds.includes(b.id));
             exportToExcel(dataToExport, addToast);
           }}
         />
 
         {/* Table */}
-        <BookingTable
-          data={currentItems}
-          onView={handleView}
-          className="border-none shadow-none rounded-none"
-          selectedIds={selectedIds}
-          onToggleSelectRow={handleToggleSelectRow}
-          isAllSelected={isAllSelected}
-          onToggleSelectAll={handleToggleSelectAll}
-        />
+        {isLoading ? (
+          <div className="p-8 text-center text-slate-500 font-medium">Loading bookings...</div>
+        ) : (
+          <BookingTable
+            data={bookings}
+            onView={handleView}
+            className="border-none shadow-none rounded-none"
+            selectedIds={selectedIds}
+            onToggleSelectRow={handleToggleSelectRow}
+            isAllSelected={isAllSelected}
+            onToggleSelectAll={handleToggleSelectAll}
+          />
+        )}
 
         {/* Pagination */}
         <Pagination
@@ -210,11 +229,11 @@ const BookingsPage = () => {
                 </div>
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Check-In</label>
-                  <p className="text-sm text-slate-800 font-semibold">{viewingBooking.checkIn}</p>
+                  <p className="text-sm text-slate-800 font-semibold">{new Date(viewingBooking.checkIn).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Check-Out</label>
-                  <p className="text-sm text-slate-800 font-semibold">{viewingBooking.checkOut}</p>
+                  <p className="text-sm text-slate-800 font-semibold">{new Date(viewingBooking.checkOut).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Booking Status</label>
@@ -242,7 +261,7 @@ const BookingsPage = () => {
               <div className="border-t border-slate-100 pt-4 mt-2 flex justify-between items-center">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Total Amount</span>
-                  <span className="text-lg font-extrabold text-blue-600">₹{viewingBooking.amount.toLocaleString()}</span>
+                  <span className="text-lg font-extrabold text-blue-600">₹{Number(viewingBooking.amount || 0).toLocaleString()}</span>
                 </div>
                 <button
                   onClick={() => setViewingBooking(null)}

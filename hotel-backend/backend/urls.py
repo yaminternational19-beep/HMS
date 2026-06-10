@@ -24,6 +24,8 @@ urlpatterns = [
     path('api/rooms/', include('apps.superadmin.rooms.urls')),
     path('api/shifts/', include('apps.superadmin.shifts.urls')),
     path('api/staff/', include('apps.superadmin.staff.urls')),
+    path('api/superadmin/bookings/', include('apps.superadmin.booking.urls')),
+    path('api/superadmin/dashboard/', include('apps.superadmin.dashboard.urls')),
     path('api/frontoffice/rooms/', include('apps.frontoffice.rooms.urls')),
     path('api/frontoffice/bookings/', include('apps.frontoffice.booking.urls')),
     path('api/frontoffice/dashboard/', include('apps.frontoffice.dashboard.urls')),

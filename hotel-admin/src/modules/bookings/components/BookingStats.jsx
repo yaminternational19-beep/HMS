@@ -3,39 +3,41 @@ import { MdBookOnline, MdMeetingRoom, MdPeople, MdLogout } from 'react-icons/md'
 import StatsCard from '../../../components/global/stats/StatsCard';
 import StatsGrid from '../../../components/global/stats/StatsGrid';
 
-const BookingStats = ({ data = [] }) => {
-  // Compute booking stats dynamically
-  const total = data.length;
-  const active = data.filter(b => b.status === 'Confirmed' || b.status === 'Checked-In').length;
-  const checkedIn = data.filter(b => b.status === 'Checked-In').reduce((sum, b) => sum + b.totalGuests, 0);
-  const pendingCheckout = data.filter(b => b.status === 'Checked-In' && b.checkOut === '2026-05-18').length;
+const BookingStats = ({ stats = {} }) => {
+  // Use pre-calculated stats from server
+  const {
+    totalBookings = 0,
+    activeBookings = 0,
+    checkedInGuests = 0,
+    pendingCheckouts = 0
+  } = stats;
 
   return (
     <StatsGrid>
       <StatsCard
         title="Total Bookings"
-        value={total}
+        value={totalBookings}
         icon={<MdBookOnline size={20} />}
         theme="blue"
         subtitle="Registered reservations"
       />
       <StatsCard
         title="Active Bookings"
-        value={active}
+        value={activeBookings}
         icon={<MdMeetingRoom size={20} />}
         theme="emerald"
         subtitle="Confirmed & In-house"
       />
       <StatsCard
         title="Checked-In Guests"
-        value={checkedIn}
+        value={checkedInGuests}
         icon={<MdPeople size={20} />}
         theme="yellow"
         subtitle="Currently in house"
       />
       <StatsCard
         title="Pending Checkouts"
-        value={pendingCheckout || 3}
+        value={pendingCheckouts}
         icon={<MdLogout size={20} />}
         theme="red"
         subtitle="Departures outstanding"
