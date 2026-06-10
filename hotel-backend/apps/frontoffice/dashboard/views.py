@@ -7,6 +7,7 @@ from django.db.models import Sum, Avg
 from django.utils import timezone
 from zoneinfo import ZoneInfo
 import datetime
+from apps.frontoffice.dashboard.models import FrontofficeAlert
 
 def get_auth_employee(request):
     return getattr(request, 'employee', None)
@@ -128,44 +129,26 @@ def get_dashboard_data(request):
             })
 
         # Live Alerts
+        alerts_qs = FrontofficeAlert.objects.all().order_by('-created_at')[:5]
         alerts = []
-        late_checkouts = Booking.objects.filter(status='Checked-In', check_out__date=today)
-        idx = 1
-        for b in late_checkouts[:2]:
-            alerts.append({
-                "id": idx,
-                "type": "warning",
-                "message": f"Room {b.room_snapshot_number} ({b.guest_name}) scheduled checkout today",
-                "time": "Today"
-            })
-            idx += 1
-            
-        cleaning_rooms = Rooms.objects.filter(status='cleaning')
-        for r in cleaning_rooms[:2]:
-            alerts.append({
-                "id": idx,
-                "type": "info",
-                "message": f"Room {r.room_number} needs housekeeping cleaning",
-                "time": "Active"
-            })
-            idx += 1
+        for alert in alerts_qs:
+            now = timezone.now()
+            diff = now - alert.created_at
+            if diff.days > 0:
+                time_str = f"{diff.days} days ago"
+            elif diff.seconds >= 3600:
+                time_str = f"{diff.seconds // 3600} hours ago"
+            elif diff.seconds >= 60:
+                time_str = f"{diff.seconds // 60} mins ago"
+            else:
+                time_str = "Just now"
 
-        maintenance_rooms = Rooms.objects.filter(status__in=['maintenance', 'under maintenance'])
-        for r in maintenance_rooms[:2]:
             alerts.append({
-                "id": idx,
-                "type": "danger",
-                "message": f"Room {r.room_number} requires HVAC maintenance service",
-                "time": "Active"
+                "id": alert.id,
+                "type": alert.type,
+                "message": alert.title + " - " + alert.desc,
+                "time": time_str
             })
-            idx += 1
-
-        if not alerts:
-            alerts = [
-                { "id": 1, "type": "warning", "message": "Room 204 requested late checkout (02:00 PM)", "time": "10 mins ago" },
-                { "id": 2, "type": "info", "message": "Housekeeping completed cleaning Room 105", "time": "25 mins ago" },
-                { "id": 3, "type": "danger", "message": "Room 302 reported HVAC issues - Maintenance needed", "time": "1 hour ago" }
-            ]
 
         data = {
             "stats": stats,

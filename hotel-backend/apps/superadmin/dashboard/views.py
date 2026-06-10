@@ -5,6 +5,8 @@ from django.db.models import Sum
 from apps.frontoffice.booking.models import Booking, BookingPayment, BookingTransaction
 from apps.superadmin.staff.models import Staff
 from apps.superadmin.rooms.models import Rooms
+from apps.superadmin.dashboard.models import SuperadminAlert
+from django.utils import timezone
 
 class DashboardAPIView(APIView):
     """
@@ -74,23 +76,29 @@ class DashboardAPIView(APIView):
                 "date": payment.created_at.strftime("%b %d, %H:%M")
             })
 
-        # 6. Urgent Alerts (Mocked for now)
-        urgent_alerts = [
-            {
-                "id": 1,
-                "title": 'System Optimization',
-                "desc": 'Server cache cleared successfully.',
-                "time": '10 mins ago',
-                "type": 'info',
-            },
-            {
-                "id": 2,
-                "title": 'High Occupancy Alert',
-                "desc": f'Occupancy is at {occupancy_rate}%. Ensure adequate staff.',
-                "time": '1 hour ago',
-                "type": 'warning',
-            }
-        ]
+        # 6. Urgent Alerts
+        alerts_qs = SuperadminAlert.objects.all().order_by('-created_at')[:5]
+        urgent_alerts = []
+        for alert in alerts_qs:
+            # Generate a "time ago" string based on created_at
+            now = timezone.now()
+            diff = now - alert.created_at
+            if diff.days > 0:
+                time_str = f"{diff.days} days ago"
+            elif diff.seconds >= 3600:
+                time_str = f"{diff.seconds // 3600} hours ago"
+            elif diff.seconds >= 60:
+                time_str = f"{diff.seconds // 60} mins ago"
+            else:
+                time_str = "Just now"
+
+            urgent_alerts.append({
+                "id": alert.id,
+                "title": alert.title,
+                "desc": alert.desc,
+                "time": time_str,
+                "type": alert.type,
+            })
 
         return Response({
             "status": "success",
