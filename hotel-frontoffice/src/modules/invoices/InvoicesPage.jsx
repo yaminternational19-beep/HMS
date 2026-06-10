@@ -7,7 +7,9 @@ import { getInvoicesList, updateBooking } from '../../api/booking';
 import { INVOICE_STATUS } from './constants/invoiceStatus';
 import { useToastStore } from '../../store/useToastStore';
 import ActionButton from '../../components/ActionButton';
+import ExportButtons from '../../components/ExportButtons';
 import Pagination from '../../components/Pagination';
+import { exportToPDF, exportToExcel } from './services/invoiceExport.service';
 import { Loader2 } from 'lucide-react';
 import './styles/invoices.css';
 
@@ -16,6 +18,7 @@ const InvoicesPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const addToast = useToastStore(s => s.addToast);
 
@@ -58,6 +61,20 @@ const InvoicesPage = () => {
 
   const handleView = (inv) => setSelectedInvoice(inv);
 
+  const handleToggleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map(i => i.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelectRow = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   const handleMarkPaid = async (inv) => {
     try {
       const raw = inv.raw || {};
@@ -87,6 +104,7 @@ const InvoicesPage = () => {
     setSearch('');
     setStatusFilter('All');
     setCurrentPage(1);
+    setSelectedIds([]);
     addToast('Filters reset.', 'info');
   };
 
@@ -142,6 +160,25 @@ const InvoicesPage = () => {
           <ActionButton variant="secondary" icon={MdRestartAlt} onClick={handleReset}>
             Reset
           </ActionButton>
+
+          <ExportButtons 
+            onExportPDF={() => {
+              if (selectedIds.length === 0) {
+                addToast('Please select invoices from the list before exporting.', 'warning');
+                return;
+              }
+              const dataToExport = filtered.filter(i => selectedIds.includes(i.id));
+              exportToPDF(dataToExport);
+            }}
+            onExportExcel={() => {
+              if (selectedIds.length === 0) {
+                addToast('Please select invoices from the list before exporting.', 'warning');
+                return;
+              }
+              const dataToExport = filtered.filter(i => selectedIds.includes(i.id));
+              exportToExcel(dataToExport);
+            }}
+          />
         </div>
 
         {/* Table / Loader */}
@@ -152,7 +189,13 @@ const InvoicesPage = () => {
           </div>
         ) : (
           <>
-            <InvoiceTable invoices={currentItems} onView={handleView} />
+            <InvoiceTable 
+              invoices={currentItems} 
+              onView={handleView}
+              selectedIds={selectedIds}
+              onToggleSelectAll={handleToggleSelectAll}
+              onToggleSelectRow={handleToggleSelectRow}
+            />
             <Pagination
               currentPage={currentPage}
               totalItems={totalItems}

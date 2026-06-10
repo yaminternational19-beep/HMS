@@ -103,14 +103,28 @@ const BookingsPage = () => {
   const currentItemIds = bookings.map((item) => item.id);
   const isAllSelected = bookings.length > 0 && currentItemIds.every((id) => selectedIds.includes(id));
 
-  const handleToggleSelectAll = () => {
+  const handleToggleSelectAll = async () => {
     if (isAllSelected) {
-      setSelectedIds((prev) => prev.filter((id) => !currentItemIds.includes(id)));
+      setSelectedIds([]);
     } else {
-      setSelectedIds((prev) => {
-        const newSelections = currentItemIds.filter((id) => !prev.includes(id));
-        return [...prev, ...newSelections];
-      });
+      addToast('Selecting all records...', 'info');
+      try {
+        const response = await getSuperadminBookings({
+          page: 1,
+          page_size: 100000,
+          search: filters.search,
+          roomType: filters.roomType,
+          status: filters.status
+        });
+        if (response && response.status === 'success') {
+          const fullData = response.data;
+          const allIds = fullData.map(b => b.id);
+          setSelectedIds(allIds);
+          addToast(`Selected all ${allIds.length} records.`, 'success');
+        }
+      } catch (error) {
+        addToast('Failed to select all records.', 'error');
+      }
     }
   };
 
@@ -147,21 +161,51 @@ const BookingsPage = () => {
           filters={filters}
           onFilterChange={handleFilterChange}
           onReset={handleReset}
-          onExportPDF={() => {
+          onExportPDF={async () => {
             if (selectedIds.length === 0) {
               addToast('Please select data from the list before exporting.', 'warning');
               return;
             }
-            const dataToExport = bookings.filter((b) => selectedIds.includes(b.id));
-            exportToPDF(dataToExport, addToast);
+            addToast('Preparing PDF export...', 'info');
+            try {
+              const res = await getSuperadminBookings({
+                page: 1,
+                page_size: 100000,
+                search: filters.search,
+                roomType: filters.roomType,
+                status: filters.status
+              });
+              if (res && res.status === 'success') {
+                const fullData = res.data;
+                const dataToExport = fullData.filter((b) => selectedIds.includes(b.id));
+                exportToPDF(dataToExport, addToast);
+              }
+            } catch (err) {
+              addToast('Failed to fetch data for PDF export.', 'error');
+            }
           }}
-          onExportExcel={() => {
+          onExportExcel={async () => {
             if (selectedIds.length === 0) {
               addToast('Please select data from the list before exporting.', 'warning');
               return;
             }
-            const dataToExport = bookings.filter((b) => selectedIds.includes(b.id));
-            exportToExcel(dataToExport, addToast);
+            addToast('Preparing Excel export...', 'info');
+            try {
+              const res = await getSuperadminBookings({
+                page: 1,
+                page_size: 100000,
+                search: filters.search,
+                roomType: filters.roomType,
+                status: filters.status
+              });
+              if (res && res.status === 'success') {
+                const fullData = res.data;
+                const dataToExport = fullData.filter((b) => selectedIds.includes(b.id));
+                exportToExcel(dataToExport, addToast);
+              }
+            } catch (err) {
+              addToast('Failed to fetch data for Excel export.', 'error');
+            }
           }}
         />
 

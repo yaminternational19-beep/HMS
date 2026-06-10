@@ -173,7 +173,7 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
         if (editingData.raw) {
           setFormData(editingData.raw);
         } else {
-          // Construct compliant structure from flat mock row
+
           setFormData({
             ...initialBlankState,
             bookingDetails: {

@@ -28,7 +28,7 @@ class SuperadminBookingListView(APIView):
             total=Sum('total_guests')
         )['total'] or 0
         
-        # Pending Checkouts (Checked-in today but need to checkout, here we'll just mock to 3 or calc logic)
+        # Pending Checkouts (Checked-in today but need to checkout)
         from datetime import date
         pending_checkouts = queryset.filter(status='Checked-In', check_out__date__lte=date.today()).count()
 
@@ -41,7 +41,7 @@ class SuperadminBookingListView(APIView):
             "totalBookings": total_bookings,
             "activeBookings": active_bookings,
             "checkedInGuests": checked_in_guests,
-            "pendingCheckouts": pending_checkouts or 3, # Fallback matching UI behavior
+            "pendingCheckouts": pending_checkouts,
             "arrivals": arrivals,
             "departures": departures,
             "reserved": reserved

@@ -12,7 +12,7 @@ const statusConfig = {
   [INVOICE_STATUS.CANCELLED]: { cls: 'inv-badge-cancelled', icon: <MdCancel size={11} />,         label: 'Cancelled' }
 };
 
-const InvoiceTable = ({ invoices, onView }) => {
+const InvoiceTable = ({ invoices, onView, selectedIds = [], onToggleSelectAll = () => {}, onToggleSelectRow = () => {} }) => {
   if (!invoices || invoices.length === 0) {
     return (
       <div className="py-16 flex flex-col items-center text-slate-400">
@@ -27,6 +27,15 @@ const InvoiceTable = ({ invoices, onView }) => {
       <table className="inv-table">
         <thead className="inv-table-head">
           <tr>
+            <th className="inv-table-th w-10 text-center">
+              <input
+                type="checkbox"
+                checked={invoices.length > 0 && invoices.every(inv => selectedIds.includes(inv.id))}
+                onChange={onToggleSelectAll}
+                className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-600 cursor-pointer h-4 w-4"
+                title="Select All Invoices"
+              />
+            </th>
             <th className="inv-table-th">Invoice #</th>
             <th className="inv-table-th">Guest</th>
             <th className="inv-table-th">Room</th>
@@ -43,6 +52,14 @@ const InvoiceTable = ({ invoices, onView }) => {
             const badge = statusConfig[inv.status] || statusConfig[INVOICE_STATUS.PENDING];
             return (
               <tr key={inv.id} className="inv-table-row">
+                <td className="inv-table-td text-center w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(inv.id)}
+                    onChange={() => onToggleSelectRow(inv.id)}
+                    className="rounded border-slate-350 text-indigo-600 focus:ring-indigo-600 cursor-pointer h-4 w-4"
+                  />
+                </td>
                 <td className="inv-table-td whitespace-nowrap">
                   <span className="inv-id">{inv.id}</span>
                   <p className="text-[10px] text-slate-400 mt-0.5">{inv.bookingId}</p>
