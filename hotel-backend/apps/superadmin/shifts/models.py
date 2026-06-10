@@ -1,8 +1,11 @@
 from django.db import models
 
 class Shifts(models.Model):
-    # Primary Key matching format 'SHF-01', 'SHF-02', etc.
-    id = models.CharField(primary_key=True, max_length=100, unique=True, db_index=True)
+    # Primary Key
+    id = models.BigAutoField(primary_key=True)
+    
+    # Custom Shift Code matching format 'SHF-01', 'SHF-02', etc.
+    shift_code = models.CharField(max_length=100, unique=True, db_index=True)
     
     # Unique shift name
     name = models.CharField(max_length=150, unique=True, db_index=True)

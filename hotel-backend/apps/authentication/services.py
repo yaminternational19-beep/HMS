@@ -82,7 +82,7 @@ class StaffAuthService:
         # 1. Lookup staff member by id (e.g. STF-02) or uniqueCode (e.g. 29384756)
         try:
             member = Staff.objects.get(
-                Q(id=staff_code_clean) | Q(uniqueCode=staff_code_clean),
+                Q(staff_code=staff_code_clean) | Q(unique_code=staff_code_clean),
                 status='active'
             )
         except Staff.DoesNotExist:
@@ -113,8 +113,8 @@ class StaffAuthService:
 
         # Generate JWT Token payload (separate employee payload)
         token_payload = {
-            "employee_id": member.id,
-            "unique_code": member.uniqueCode,
+            "employee_id": member.staff_code,
+            "unique_code": member.unique_code,
             "email": member.email,
             "role": member.dept,
             "aud": "hotel-frontoffice"
@@ -123,8 +123,8 @@ class StaffAuthService:
 
         # Build profile payload
         profile = {
-            "id": member.id,
-            "uniqueCode": member.uniqueCode,
+            "id": member.staff_code,
+            "uniqueCode": member.unique_code,
             "name": member.name,
             "email": member.email,
             "role": member.dept,

@@ -50,9 +50,10 @@ export const getBookingPayslip = async (bookingCode) => {
  * @param {File} file - The file object to upload.
  * @returns {Promise<Object>} - API success response containing the URL and name of the uploaded file.
  */
-export const uploadBookingDocument = async (file) => {
+export const uploadBookingDocument = async (file, bookingCode = 'general') => {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('booking_code', bookingCode);
   return axiosInstance.post('/frontoffice/bookings/upload/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'

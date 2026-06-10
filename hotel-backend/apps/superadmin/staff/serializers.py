@@ -4,8 +4,20 @@ from apps.superadmin.shifts.models import Shifts
 
 class StaffSerializer(serializers.ModelSerializer):
     # Map the database ForeignKey relation's shift_id directly to 'shiftId' expected by frontend
-    shiftId = serializers.CharField(source='shift_id', required=True)
-    isCheckedIn = serializers.SerializerMethodField()
+    shiftId = serializers.CharField(source='shift', required=True)
+    isCheckedIn = serializers.BooleanField(source='is_checked_in', default=False)
+    uniqueCode = serializers.CharField(source='unique_code', read_only=True)
+    phoneCountry = serializers.CharField(source='phone_country', required=False)
+    phoneNo = serializers.CharField(source='phone_no', required=False)
+    emergencyCountry = serializers.CharField(source='emergency_country', required=False)
+    emergencyNo = serializers.CharField(source='emergency_no', required=False)
+    govtProofType = serializers.CharField(source='govt_proof_type', required=False)
+    govtProofId = serializers.CharField(source='govt_proof_id', required=False)
+    govtProofFileName = serializers.CharField(source='govt_proof_file_name', required=False, allow_null=True)
+    govtProofFileUrl = serializers.CharField(source='govt_proof_file_url', required=False, allow_null=True)
+    profileFileName = serializers.CharField(source='profile_file_name', required=False, allow_null=True)
+    profileFileUrl = serializers.CharField(source='profile_file_url', required=False, allow_null=True)
+
     joined = serializers.SerializerMethodField()
     phone = serializers.SerializerMethodField()
     emergencyPhone = serializers.SerializerMethodField()
@@ -59,10 +71,10 @@ class StaffSerializer(serializers.ModelSerializer):
         return obj.dept
 
     def get_phone(self, obj):
-        return f"{obj.phoneCountry} {obj.phoneNo}"
+        return f"{obj.phone_country} {obj.phone_no}"
 
     def get_emergencyPhone(self, obj):
-        return f"{obj.emergencyCountry} {obj.emergencyNo}"
+        return f"{obj.emergency_country} {obj.emergency_no}"
 
     def get_logs(self, obj):
         return []
@@ -70,7 +82,7 @@ class StaffSerializer(serializers.ModelSerializer):
     def validate_shiftId(self, value):
         # Enforce referential integrity checks on shifts relation
         try:
-            Shifts.objects.get(id=value.strip())
+            Shifts.objects.get(shift_code=value.strip())
         except Shifts.DoesNotExist:
             raise serializers.ValidationError(f"Shift timing selection with ID '{value}' does not exist.")
         return value.strip()

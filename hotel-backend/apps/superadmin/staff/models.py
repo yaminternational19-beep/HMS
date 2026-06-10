@@ -2,11 +2,14 @@ from django.db import models
 from apps.superadmin.shifts.models import Shifts
 
 class Staff(models.Model):
+    # Primary Key
+    id = models.BigAutoField(primary_key=True)
+    
     # Primary Key matching format 'STF-01', 'STF-02', etc.
-    id = models.CharField(primary_key=True, max_length=100, unique=True, db_index=True)
+    staff_code = models.CharField(max_length=100, unique=True, db_index=True)
     
     # 8-digit unique code generated dynamically (e.g. '29384756')
-    uniqueCode = models.CharField(max_length=50, unique=True, db_index=True)
+    unique_code = models.CharField(max_length=50, unique=True, db_index=True)
     
     # Staff Personal Details
     name = models.CharField(max_length=255)
@@ -15,28 +18,28 @@ class Staff(models.Model):
     email = models.CharField(max_length=255, null=True, blank=True)
     
     # Contact and emergency details with country codes
-    phoneCountry = models.CharField(max_length=10)
-    phoneNo = models.CharField(max_length=50)
-    emergencyCountry = models.CharField(max_length=10)
-    emergencyNo = models.CharField(max_length=50)
+    phone_country = models.CharField(max_length=10)
+    phone_no = models.CharField(max_length=50)
+    emergency_country = models.CharField(max_length=10)
+    emergency_no = models.CharField(max_length=50)
     
     # Roster Shift relation
     shift = models.ForeignKey(Shifts, on_delete=models.PROTECT, related_name='staff_members')
     
     # System Status & Verification
     status = models.CharField(max_length=50, default='active', db_index=True)  # active, on-leave
-    isCheckedIn = models.BooleanField(default=False)
+    is_checked_in = models.BooleanField(default=False)
     address = models.TextField()
     
     # Government Verification scans
-    govtProofType = models.CharField(max_length=100)
-    govtProofId = models.CharField(max_length=100)
-    govtProofFileName = models.CharField(max_length=255, null=True, blank=True)
-    govtProofFileUrl = models.TextField(null=True, blank=True)
+    govt_proof_type = models.CharField(max_length=100)
+    govt_proof_id = models.CharField(max_length=100)
+    govt_proof_file_name = models.CharField(max_length=255, null=True, blank=True)
+    govt_proof_file_url = models.TextField(null=True, blank=True)
     
     # User Profile Avatar upload
-    profileFileName = models.CharField(max_length=255, null=True, blank=True)
-    profileFileUrl = models.TextField(null=True, blank=True)
+    profile_file_name = models.CharField(max_length=255, null=True, blank=True)
+    profile_file_url = models.TextField(null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -45,7 +48,7 @@ class Staff(models.Model):
         db_table = 'Staff'
 
     def __str__(self):
-        return f"{self.name} ({self.id}) - {self.dept}"
+        return f"{self.name} ({self.staff_code}) - {self.dept}"
 
 
 class StaffLog(models.Model):

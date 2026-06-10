@@ -74,29 +74,29 @@ class StaffService:
         updated_at_ist = member.updated_at.astimezone(ist_tz) if member.updated_at else None
 
         return {
-            "id": member.id,
-            "uniqueCode": member.uniqueCode,
+            "id": member.staff_code,
+            "uniqueCode": member.unique_code,
             "name": member.name,
             "dept": member.dept,
             "role": member.dept,
             "password": member.password,
             "email": member.email or "",
-            "phoneCountry": member.phoneCountry,
-            "phoneNo": member.phoneNo,
-            "phone": f"{member.phoneCountry} {member.phoneNo}",
-            "emergencyCountry": member.emergencyCountry,
-            "emergencyNo": member.emergencyNo,
-            "emergencyPhone": f"{member.emergencyCountry} {member.emergencyNo}",
-            "shiftId": member.shift_id,
+            "phoneCountry": member.phone_country,
+            "phoneNo": member.phone_no,
+            "phone": f"{member.phone_country} {member.phone_no}",
+            "emergencyCountry": member.emergency_country,
+            "emergencyNo": member.emergency_no,
+            "emergencyPhone": f"{member.emergency_country} {member.emergency_no}",
+            "shiftId": member.shift.shift_code if member.shift else '',
             "status": member.status,
             "isCheckedIn": cls.is_staff_on_duty(member),
             "address": member.address,
-            "govtProofType": member.govtProofType,
-            "govtProofId": member.govtProofId,
-            "govtProofFileName": member.govtProofFileName or "",
-            "govtProofFileUrl": member.govtProofFileUrl or "",
-            "profileFileName": member.profileFileName or "",
-            "profileFileUrl": member.profileFileUrl or "",
+            "govtProofType": member.govt_proof_type,
+            "govtProofId": member.govt_proof_id,
+            "govtProofFileName": member.govt_proof_file_name or "",
+            "govtProofFileUrl": member.govt_proof_file_url or "",
+            "profileFileName": member.profile_file_name or "",
+            "profileFileUrl": member.profile_file_url or "",
             "joined": created_at_ist.strftime("%b %Y") if created_at_ist else "",
             "created_at": created_at_ist.isoformat() if created_at_ist else None,
             "updated_at": updated_at_ist.isoformat() if updated_at_ist else None
@@ -121,8 +121,8 @@ class StaffService:
                 search_val = search.strip()
                 queryset = queryset.filter(
                     Q(name__icontains=search_val) | 
-                    Q(id__icontains=search_val) | 
-                    Q(uniqueCode__icontains=search_val)
+                    Q(staff_code__icontains=search_val) | 
+                    Q(unique_code__icontains=search_val)
                 )
 
             # 2. Department / Role Selector
@@ -138,7 +138,7 @@ class StaffService:
             # 4. Assigned Shift timing selector
             shift_id = filters.get('shiftId')
             if shift_id and shift_id != 'all':
-                queryset = queryset.filter(shift_id=shift_id.strip())
+                queryset = queryset.filter(shift__shift_code=shift_id.strip())
 
         staff_list = [cls.serialize_staff(member) for member in queryset]
 
@@ -182,7 +182,7 @@ class StaffService:
         Retrieves a single staff record by its unique STF ID.
         """
         try:
-            member = Staff.objects.get(id=staff_id.strip())
+            member = Staff.objects.get(staff_code=staff_id.strip())
             return cls.serialize_staff(member)
         except Staff.DoesNotExist:
             return None
@@ -194,7 +194,7 @@ class StaffService:
         """
         while True:
             code = "".join([str(random.randint(0, 9)) for _ in range(8)])
-            if not Staff.objects.filter(uniqueCode=code).exists():
+            if not Staff.objects.filter(unique_code=code).exists():
                 return code
 
     @classmethod
@@ -207,7 +207,7 @@ class StaffService:
         if not last_member:
             return 'STF-01'
         
-        last_id = last_member.id
+        last_id = last_member.staff_code
         try:
             parts = last_id.split('-')
             if len(parts) == 2 and parts[1].isdigit():
@@ -237,7 +237,7 @@ class StaffService:
         # Resolve Shift relationship
         shift_id = data.get('shift_id', '').strip()
         try:
-            shift_instance = Shifts.objects.get(id=shift_id)
+            shift_instance = Shifts.objects.get(shift_code=shift_id)
         except Shifts.DoesNotExist:
             raise ValueError(f"Shift timing selection with ID '{shift_id}' does not exist.")
 
@@ -259,26 +259,26 @@ class StaffService:
             govt_file_name = govt_file.name
 
         member = Staff(
-            id=staff_id,
-            uniqueCode=unique_code,
+            staff_code=staff_id,
+            unique_code=unique_code,
             name=data.get('name', '').strip(),
             dept=data.get('dept', '').strip(),
             password=make_password(data.get('password', '').strip()) if data.get('password') else None,
             email=data.get('email', '').strip() if data.get('email') else None,
-            phoneCountry=data.get('phoneCountry', '+971').strip(),
-            phoneNo=data.get('phoneNo', '').strip(),
-            emergencyCountry=data.get('emergencyCountry', '+971').strip(),
-            emergencyNo=data.get('emergencyNo', '').strip(),
+            phone_country=data.get('phoneCountry', '+971').strip(),
+            phone_no=data.get('phoneNo', '').strip(),
+            emergency_country=data.get('emergencyCountry', '+971').strip(),
+            emergency_no=data.get('emergencyNo', '').strip(),
             shift=shift_instance,
             status=data.get('status', 'active').strip(),
             address=data.get('address', '').strip(),
-            govtProofType=data.get('govtProofType', 'Passport').strip(),
-            govtProofId=data.get('govtProofId', '').strip(),
-            govtProofFileName=govt_file_name,
-            govtProofFileUrl=govt_file_url,
-            profileFileName=profile_file_name,
-            profileFileUrl=profile_file_url,
-            isCheckedIn=data.get('isCheckedIn', False)
+            govt_proof_type=data.get('govtProofType', 'Passport').strip(),
+            govt_proof_id=data.get('govtProofId', '').strip(),
+            govt_proof_file_name=govt_file_name,
+            govt_proof_file_url=govt_file_url,
+            profile_file_name=profile_file_name,
+            profile_file_url=profile_file_url,
+            is_checked_in=data.get('isCheckedIn', False)
         )
         member.save()
         return cls.serialize_staff(member)
@@ -290,7 +290,7 @@ class StaffService:
         Partially updates an existing staff profile after applying validators.
         """
         try:
-            member = Staff.objects.get(id=staff_id.strip())
+            member = Staff.objects.get(staff_code=staff_id.strip())
         except Staff.DoesNotExist:
             return None
 
@@ -307,51 +307,51 @@ class StaffService:
         if 'email' in data:
             member.email = data['email'].strip() if data['email'] else None
         if 'phoneCountry' in data:
-            member.phoneCountry = data['phoneCountry'].strip()
+            member.phone_country = data['phoneCountry'].strip()
         if 'phoneNo' in data:
-            member.phoneNo = data['phoneNo'].strip()
+            member.phone_no = data['phoneNo'].strip()
         if 'emergencyCountry' in data:
-            member.emergencyCountry = data['emergencyCountry'].strip()
+            member.emergency_country = data['emergencyCountry'].strip()
         if 'emergencyNo' in data:
-            member.emergencyNo = data['emergencyNo'].strip()
+            member.emergency_no = data['emergencyNo'].strip()
         if 'status' in data:
             member.status = data['status'].strip()
         if 'address' in data:
             member.address = data['address'].strip()
         if 'govtProofType' in data:
-            member.govtProofType = data['govtProofType'].strip()
+            member.govt_proof_type = data['govtProofType'].strip()
         if 'govtProofId' in data:
-            member.govtProofId = data['govtProofId'].strip()
+            member.govt_proof_id = data['govtProofId'].strip()
         if 'isCheckedIn' in data:
-            member.isCheckedIn = data['isCheckedIn']
+            member.is_checked_in = data['isCheckedIn']
 
         # Process binary scans uploads
         profile_file = files.get('profileFile') if files else None
         if profile_file:
-            path = UploadService.upload_single_file(profile_file, subfolder=f"staff/{member.uniqueCode}")
-            member.profileFileUrl = f"http://localhost:8000{path}"
-            member.profileFileName = profile_file.name
+            path = UploadService.upload_single_file(profile_file, subfolder=f"staff/{member.unique_code}")
+            member.profile_file_url = f"http://localhost:8000{path}"
+            member.profile_file_name = profile_file.name
         else:
             if 'profileFileName' in data:
-                member.profileFileName = data['profileFileName'].strip() if data['profileFileName'] else None
+                member.profile_file_name = data['profileFileName'].strip() if data['profileFileName'] else None
             if 'profileFileUrl' in data:
-                member.profileFileUrl = data['profileFileUrl'].strip() if data['profileFileUrl'] else None
+                member.profile_file_url = data['profileFileUrl'].strip() if data['profileFileUrl'] else None
 
         govt_file = files.get('govtProofFile') if files else None
         if govt_file:
-            path = UploadService.upload_single_file(govt_file, subfolder=f"staff/{member.uniqueCode}")
-            member.govtProofFileUrl = f"http://localhost:8000{path}"
-            member.govtProofFileName = govt_file.name
+            path = UploadService.upload_single_file(govt_file, subfolder=f"staff/{member.unique_code}")
+            member.govt_proof_file_url = f"http://localhost:8000{path}"
+            member.govt_proof_file_name = govt_file.name
         else:
             if 'govtProofFileName' in data:
-                member.govtProofFileName = data['govtProofFileName'].strip() if data['govtProofFileName'] else None
+                member.govt_proof_file_name = data['govtProofFileName'].strip() if data['govtProofFileName'] else None
             if 'govtProofFileUrl' in data:
-                member.govtProofFileUrl = data['govtProofFileUrl'].strip() if data['govtProofFileUrl'] else None
+                member.govt_proof_file_url = data['govtProofFileUrl'].strip() if data['govtProofFileUrl'] else None
 
         if 'shift_id' in data:
             shift_id = data['shift_id'].strip()
             try:
-                shift_instance = Shifts.objects.get(id=shift_id)
+                shift_instance = Shifts.objects.get(shift_code=shift_id)
                 member.shift = shift_instance
             except Shifts.DoesNotExist:
                 raise ValueError(f"Shift timing selection with ID '{shift_id}' does not exist.")
@@ -365,7 +365,7 @@ class StaffService:
         Retires and removes a staff member from active operations.
         """
         try:
-            member = Staff.objects.get(id=staff_id.strip())
+            member = Staff.objects.get(staff_code=staff_id.strip())
             member.delete()
             return True
         except Staff.DoesNotExist:
@@ -386,9 +386,9 @@ class StaffService:
             {"id": "SHF-04", "name": "Administration Shift", "time": "09:00 AM - 05:00 PM", "icon": "briefcase", "color": "blue"}
         ]
         for s in default_shifts:
-            if not Shifts.objects.filter(id=s["id"]).exists():
+            if not Shifts.objects.filter(shift_code=s["id"]).exists():
                 Shifts.objects.create(
-                    id=s["id"],
+                    shift_code=s["id"],
                     name=s["name"],
                     time=s["time"],
                     icon=s["icon"],

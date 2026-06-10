@@ -22,7 +22,7 @@ class ShiftService:
         updated_at_ist = shift.updated_at.astimezone(ist_tz) if shift.updated_at else None
 
         return {
-            "id": shift.id,
+            "id": shift.shift_code,
             "name": shift.name,
             "time": shift.time,
             "icon": shift.icon,
@@ -85,7 +85,7 @@ class ShiftService:
         Fetches a single shift by its unique formatted ID.
         """
         try:
-            shift = Shifts.objects.get(id=shift_id.strip())
+            shift = Shifts.objects.get(shift_code=shift_id.strip())
             return cls.serialize_shift(shift)
         except Shifts.DoesNotExist:
             return None
@@ -100,7 +100,7 @@ class ShiftService:
         if not last_shift:
             return 'SHF-01'
         
-        last_id = last_shift.id
+        last_id = last_shift.shift_code
         try:
             parts = last_id.split('-')
             if len(parts) == 2 and parts[1].isdigit():
@@ -128,7 +128,7 @@ class ShiftService:
         shift_id = cls.generate_next_shift_id()
 
         shift = Shifts(
-            id=shift_id,
+            shift_code=shift_id,
             name=name,
             time=time_val,
             icon=icon,
@@ -143,13 +143,13 @@ class ShiftService:
         Modifies and saves an existing shift record in partial mode.
         """
         try:
-            shift = Shifts.objects.get(id=shift_id.strip())
+            shift = Shifts.objects.get(shift_code=shift_id.strip())
         except Shifts.DoesNotExist:
             return None
 
         if 'name' in data:
             name_val = data['name'].strip()
-            if Shifts.objects.filter(name__iexact=name_val).exclude(id=shift_id).exists():
+            if Shifts.objects.filter(name__iexact=name_val).exclude(shift_code=shift_id).exists():
                 raise ValueError(f"Shift with name '{name_val}' already exists.")
             shift.name = name_val
         
@@ -169,7 +169,7 @@ class ShiftService:
         Deletes a shift record by its unique ID.
         """
         try:
-            shift = Shifts.objects.get(id=shift_id.strip())
+            shift = Shifts.objects.get(shift_code=shift_id.strip())
             shift.delete()
             return True
         except Shifts.DoesNotExist:

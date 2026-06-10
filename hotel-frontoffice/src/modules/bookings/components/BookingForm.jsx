@@ -98,7 +98,8 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
     else setIsUploadingBack(true);
 
     try {
-      const response = await uploadBookingDocument(file);
+      const currentBookingId = formData.bookingDetails.bookingId || 'general';
+      const response = await uploadBookingDocument(file, currentBookingId);
       if (response && response.success) {
         const fileUrl = response.data.url;
         handleSectionChange('idProof', isFront ? 'frontFileName' : 'backFileName', fileUrl);
@@ -118,7 +119,8 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
     if (!file) return;
 
     try {
-      const response = await uploadBookingDocument(file);
+      const currentBookingId = formData.bookingDetails.bookingId || 'general';
+      const response = await uploadBookingDocument(file, currentBookingId);
       if (response && response.success) {
         handleMemberChange(idx, 'docName', response.data.url);
         useToastStore.getState().addToast(`Member document uploaded successfully.`, 'success');

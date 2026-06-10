@@ -297,8 +297,11 @@ def upload_document(request):
 
     try:
         from core.services.upload_service import UploadService
-        # Upload file to 'bookings' subfolder
-        path = UploadService.upload_single_file(uploaded_file, subfolder='bookings')
+        # Upload file to 'bookings/{booking_code}' subfolder
+        booking_code = request.data.get('booking_code', 'general').strip()
+        subfolder_name = f'bookings/{booking_code}' if booking_code else 'bookings/general'
+        
+        path = UploadService.upload_single_file(uploaded_file, subfolder=subfolder_name)
         full_url = f"http://localhost:8000{path}"
         return success_response(
             message="File uploaded successfully.",

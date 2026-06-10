@@ -10,7 +10,7 @@ def create_room_alert(sender, instance, created, **kwargs):
     if created:
         SuperadminAlert.objects.create(
             title="New Room Created",
-            desc=f"Room {instance.room_number} ({instance.type}) was added to the inventory.",
+            desc=f"Room {instance.room_number} ({instance.room_type}) was added to the inventory.",
             type="info",
             related_model="Rooms",
             related_id=instance.room_number
@@ -21,10 +21,10 @@ def create_staff_alert(sender, instance, created, **kwargs):
     if created:
         SuperadminAlert.objects.create(
             title="New Staff Onboarded",
-            desc=f"{instance.name} was added as a {instance.role}.",
+            desc=f"{instance.name} was added as a {instance.dept}.",
             type="info",
             related_model="Staff",
-            related_id=instance.staff_id
+            related_id=instance.staff_code
         )
 
 @receiver(post_save, sender=Shifts)
@@ -32,8 +32,8 @@ def create_shift_alert(sender, instance, created, **kwargs):
     if created:
         SuperadminAlert.objects.create(
             title="New Shift Assigned",
-            desc=f"Shift {instance.shift_type} created for {instance.staff.name if instance.staff else 'unassigned'}.",
+            desc=f"Shift {instance.name} created.",
             type="info",
             related_model="Shift",
-            related_id=str(instance.id) if hasattr(instance, 'id') else ''
+            related_id=str(instance.shift_code) if hasattr(instance, 'shift_code') else ''
         )

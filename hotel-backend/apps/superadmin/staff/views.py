@@ -120,7 +120,7 @@ def update_staff_agent(request, staff_id):
         data = request.data
 
         try:
-            member_instance = Staff.objects.get(id=staff_id.strip())
+            member_instance = Staff.objects.get(staff_code=staff_id.strip())
         except Staff.DoesNotExist:
             return error_response(
                 message=f"Staff agent {staff_id} does not exist.",
@@ -236,7 +236,7 @@ def staff_logs_view(request):
         # 1. Filter by Staff ID
         staff_id = request.GET.get('staffId') or request.GET.get('staff_id')
         if staff_id and staff_id != 'all':
-            queryset = queryset.filter(staff_id=staff_id.strip())
+            queryset = queryset.filter(staff__staff_code=staff_id.strip())
             
         # 2. Filter by Period / Custom Month & Year
         period = request.GET.get('period', 'today')
@@ -298,8 +298,8 @@ def staff_logs_view(request):
                 if key not in summary_map:
                     summary_map[key] = {
                         "date": log_date_str,
-                        "staffId": log.staff.id,
-                        "staffCode": log.staff.uniqueCode,
+                        "staffId": log.staff.staff_code,
+                        "staffCode": log.staff.unique_code,
                         "staffName": log.staff.name,
                         "role": log.staff.dept,
                         "shiftName": log.staff.shift.name,
@@ -345,8 +345,8 @@ def staff_logs_view(request):
                 ist_timestamp = log.timestamp.astimezone(ist_tz)
                 logs_data.append({
                     "id": log.id,
-                    "staffId": log.staff.id,
-                    "staffCode": log.staff.uniqueCode,
+                    "staffId": log.staff.staff_code,
+                    "staffCode": log.staff.unique_code,
                     "staffName": log.staff.name,
                     "role": log.staff.dept,
                     "shiftName": log.staff.shift.name,

@@ -50,7 +50,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
                 if employee_id:
                     try:
                         # Optimized with select_related to load shift profile in a single query
-                        staff_member = Staff.objects.select_related('shift').get(id=employee_id, status='active')
+                        staff_member = Staff.objects.select_related('shift').get(staff_code=employee_id, status='active')
                         
                         # Verify if the token is still valid for the employee's shift
                         from zoneinfo import ZoneInfo

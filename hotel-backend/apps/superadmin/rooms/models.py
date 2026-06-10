@@ -15,7 +15,7 @@ class Rooms(models.Model):
     bed_type = models.CharField(max_length=100)
     
     capacity = models.IntegerField(default=2)
-    price = models.FloatField(default=0.0)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     status = models.CharField(max_length=100, default='available', db_index=True)
     
     # JSON fields for native arrays of strings (matching React arrays 100%)
