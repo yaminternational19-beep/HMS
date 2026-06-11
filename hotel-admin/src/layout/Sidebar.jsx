@@ -35,7 +35,7 @@ const Sidebar = () => {
     navigate('/login');
   };
 
-  const userEmail = getCookie('adminUserEmail') || 'praveen.reddy@blackcube.ae';
+  const userEmail = getCookie('adminUserEmail') || 'praveenreddy@blackcube.ae';
   const userInitials = userEmail.split('@')[0].substring(0, 2).toUpperCase();
 
   return (

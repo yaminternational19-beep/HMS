@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdHotel, MdLockOutline, MdBadge } from 'react-icons/md';
+import { MdHotel, MdLockOutline, MdBadge, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import ActionButton from '../components/ActionButton';
 import { loginStaff } from '../api/auth';
 import { setCookie } from '../api/cookieHelper';
@@ -8,6 +8,7 @@ import { setCookie } from '../api/cookieHelper';
 const Login = () => {
   const [staffCode, setStaffCode] = useState('STF-02');
   const [password, setPassword] = useState('SarahHMS2026');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -95,13 +96,21 @@ const Login = () => {
                 <MdLockOutline size={20} />
               </span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm text-text-main focus:border-accent outline-none bg-slate-50 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-sm text-text-main focus:border-accent outline-none bg-slate-50 transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors"
+                tabIndex="-1"
+              >
+                {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+              </button>
             </div>
           </div>
 
@@ -111,7 +120,7 @@ const Login = () => {
               <input type="checkbox" defaultChecked className="rounded border-slate-300 text-accent focus:ring-accent" />
               <span>Remember me</span>
             </label>
-            <span className="hover:underline cursor-pointer hover:text-accent transition-colors">Forgot Password?</span>
+            {/* <span className="hover:underline cursor-pointer hover:text-accent transition-colors">Forgot Password?</span> */}
           </div>
 
           {/* Submit */}

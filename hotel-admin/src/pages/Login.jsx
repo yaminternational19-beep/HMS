@@ -6,7 +6,7 @@ import { loginSuperAdmin } from '../api/auth';
 import { setCookie } from '../api/cookieHelper';
 
 const Login = () => {
-  const [email, setEmail] = useState('praveen.reddy@blackcube.ae');
+  const [email, setEmail] = useState('praveenreddy@blackcube.ae');
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -133,7 +133,7 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="praveen.reddy@blackcube.ae"
+                placeholder="praveenreddy@blackcube.ae"
                 className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl text-sm text-text-main focus:border-accent focus:ring-2 focus:ring-accent/15 outline-none bg-slate-50/50 focus:bg-white transition-all duration-200 font-medium"
               />
             </div>
@@ -143,9 +143,9 @@ const Login = () => {
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Password</label>
-              <span className="text-[11px] font-semibold text-accent hover:underline cursor-pointer transition-all">
+              {/* <span className="text-[11px] font-semibold text-accent hover:underline cursor-pointer transition-all">
                 Forgot?
-              </span>
+              </span> */}
             </div>
             <div className="relative flex items-center group">
               <span className="absolute left-3.5 text-slate-400 group-focus-within:text-accent transition-colors duration-200">
