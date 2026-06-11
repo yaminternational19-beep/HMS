@@ -22,7 +22,7 @@ class DashboardAPIView(APIView):
 
         # 3. Staff on Shift
         total_staff = Staff.objects.count()
-        staff_on_shift = Staff.objects.filter(isCheckedIn=True).count()
+        staff_on_shift = Staff.objects.filter(is_checked_in=True).count()
 
         # 4. Average Occupancy (Active Bookings / Total Rooms) * 100
         total_rooms = Rooms.objects.count()

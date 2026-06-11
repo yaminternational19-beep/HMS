@@ -69,7 +69,7 @@ const Navbar = () => {
 
           {/* Quick link button to Front Office */}
           <a
-            href="https://hms-frontoffice.vercel.app/"
+            href="https://hms-ldxz.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="p-2.5 rounded-xl text-slate-500 hover:text-accent hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200 cursor-pointer hidden laptop:flex items-center gap-1.5 text-xs font-semibold"
