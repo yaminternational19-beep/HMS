@@ -20,7 +20,7 @@ class DashboardAPIView(APIView):
         active_bookings_count = Booking.objects.filter(status__in=['Confirmed', 'Checked-In']).count()
         scheduled_today = Booking.objects.filter(status='Confirmed').count() # simple heuristic
 
-        # 3. Staff on Shift
+        # 3. Staff on Shift (Force Railway Redeploy)
         total_staff = Staff.objects.count()
         staff_on_shift = Staff.objects.filter(is_checked_in=True).count()
 
