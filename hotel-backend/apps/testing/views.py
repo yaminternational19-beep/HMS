@@ -38,7 +38,7 @@ def mysql_check(request):
 
         return error_response(
             message=str(e),
-            data={}
+            errors={}
         )
 
 
@@ -73,6 +73,6 @@ def cloudinary_check(request):
     except Exception as e:
         return error_response(
             message=f"Cloudinary connection failed: {str(e)}",
-            data={}
+            errors={}
         )
 
