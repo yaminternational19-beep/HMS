@@ -114,7 +114,7 @@ export const exportToPDF = (data = []) => {
       b.checkOut || '',
       String(b.totalGuests || 0),
       b.status || '',
-      `Rs.${b.amount || 0}`
+      `₹${b.amount || 0}`
     ]);
 
     autoTable(doc, {
@@ -256,17 +256,17 @@ export const exportPayslipToPDF = (payslipData) => {
     doc.text('Lodging Cost Statement', 14, 120);
 
     const body = [
-      [`Room Rent (${payslipData.nights} Nights x Rs.${(payslipData.roomRentPerNight || 0).toLocaleString('en-IN')})`, `Rs.${(payslipData.roomRentSubtotal || 0).toLocaleString('en-IN')}`],
-      [`Extra Charges (Amenity/Extra Bed)`, `Rs.${(payslipData.extraCharges || 0).toLocaleString('en-IN')}`],
-      [`GST / Tax`, `Rs.${(payslipData.gst || 0).toLocaleString('en-IN')}`]
+      [`Room Rent (${payslipData.nights} Nights x ₹${(payslipData.roomRentPerNight || 0).toLocaleString('en-IN')})`, `₹${(payslipData.roomRentSubtotal || 0).toLocaleString('en-IN')}`],
+      [`Extra Charges (Amenity/Extra Bed)`, `₹${(payslipData.extraCharges || 0).toLocaleString('en-IN')}`],
+      [`GST / Tax`, `₹${(payslipData.gst || 0).toLocaleString('en-IN')}`]
     ];
 
     if (payslipData.discount > 0) {
-      body.push([`Discount Applied`, `-Rs.${(payslipData.discount || 0).toLocaleString('en-IN')}`]);
+      body.push([`Discount Applied`, `-₹${(payslipData.discount || 0).toLocaleString('en-IN')}`]);
     }
 
-    body.push([`Final Charged Amount`, `Rs.${(payslipData.finalAmount || 0).toLocaleString('en-IN')}`]);
-    body.push([`Total Amount Settled`, `Rs.${(payslipData.amountPaid || 0).toLocaleString('en-IN')}`]);
+    body.push([`Final Charged Amount`, `₹${(payslipData.finalAmount || 0).toLocaleString('en-IN')}`]);
+    body.push([`Total Amount Settled`, `₹${(payslipData.amountPaid || 0).toLocaleString('en-IN')}`]);
 
     autoTable(doc, {
       startY: 125,

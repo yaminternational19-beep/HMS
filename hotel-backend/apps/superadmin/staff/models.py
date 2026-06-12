@@ -62,3 +62,38 @@ class StaffLog(models.Model):
 
     def __str__(self):
         return f"{self.staff.name} - {self.action} @ {self.timestamp}"
+
+
+class Payroll(models.Model):
+    staff = models.OneToOneField(Staff, on_delete=models.CASCADE, related_name='payroll')
+    basic_salary = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    overtime_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Payroll'
+
+    def __str__(self):
+        return f"Payroll - {self.staff.name}"
+
+
+class SalarySlip(models.Model):
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='salary_slips')
+    month = models.IntegerField()
+    year = models.IntegerField()
+    total_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50, default='Pending')  # Pending, Paid
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'SalarySlip'
+        unique_together = ('staff', 'month', 'year')
+
+    def __str__(self):
+        return f"Salary {self.month}/{self.year} - {self.staff.name}"
+

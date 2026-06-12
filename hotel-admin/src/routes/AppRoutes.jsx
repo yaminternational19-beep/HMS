@@ -10,6 +10,8 @@ import StaffPage from '../modules/staff';
 import StaffLogsPage from '../modules/staff/StaffLogsPage';
 import ShiftsPage from '../modules/shifts';
 import ReportsPage from '../modules/reports';
+import InventoryPage from '../modules/inventory/InventoryPage';
+import PayrollPage from '../modules/payroll/PayrollPage';
 
 const AppRoutes = () => {
   return (
@@ -27,6 +29,8 @@ const AppRoutes = () => {
           <Route path="/staff-logs" element={<StaffLogsPage />} />
           <Route path="/shifts" element={<ShiftsPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/payroll" element={<PayrollPage />} />
         </Route>
       </Route>
     </Routes>

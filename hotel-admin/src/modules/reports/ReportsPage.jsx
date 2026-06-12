@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 
 const analyticsSummary = [
-  { label: 'Room Revenue', value: '$84,200', change: '+12.5%', icon: <Coins size={18} className="text-emerald-600" />, bg: 'bg-emerald-50' },
-  { label: 'F&B Revenue', value: '$32,150', change: '+8.3%', icon: <BarChart3 size={18} className="text-blue-600" />, bg: 'bg-blue-50' },
+  { label: 'Room Revenue', value: '₹84,200', change: '+12.5%', icon: <Coins size={18} className="text-emerald-600" />, bg: 'bg-emerald-50' },
+  { label: 'F&B Revenue', value: '₹32,150', change: '+8.3%', icon: <BarChart3 size={18} className="text-blue-600" />, bg: 'bg-blue-50' },
   { label: 'Occupancy Rate Avg', value: '78.4%', change: '+4.1%', icon: <TrendingUp size={18} className="text-amber-600" />, bg: 'bg-amber-50' },
   { label: 'Guest Feedback Score', value: '4.8 / 5.0', change: '+2.1%', icon: <PieChart size={18} className="text-purple-600" />, bg: 'bg-purple-50' },
 ];
@@ -107,7 +107,7 @@ const ReportsPage = () => {
             <div className="border border-slate-200 rounded-xl p-5 space-y-4">
               <div className="flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-wide">
                 <span>Expenditures by Dept</span>
-                <span className="text-slate-700">$45,180.00 Total</span>
+                <span className="text-slate-700">₹45,180.00 Total</span>
               </div>
               
               {/* List distribution chart */}

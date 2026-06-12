@@ -89,8 +89,8 @@ export const exportToPDF = (data = []) => {
       inv.guestName || '',
       `Room ${inv.roomNumber}`,
       `${inv.nights} Nights`,
-      `Rs.${inv.totalAmount || 0}`,
-      `Rs.${inv.balanceDue || 0}`,
+      `₹${inv.totalAmount || 0}`,
+      `₹${inv.balanceDue || 0}`,
       inv.status || ''
     ]);
 

@@ -110,7 +110,7 @@ export const exportToPDF = (data = [], addToast = () => {}) => {
       b.checkOut || '',
       String(b.totalGuests || 0),
       b.status || '',
-      `Rs.${b.amount || 0}`
+      `₹${b.amount || 0}`
     ]);
 
     autoTable(doc, {

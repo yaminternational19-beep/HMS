@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'apps.frontoffice.booking',
     'apps.frontoffice.dashboard',
     'apps.superadmin.dashboard',
+    'apps.superadmin.inventory',
     'core',
 ]
 

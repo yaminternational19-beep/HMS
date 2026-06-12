@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Staff
+from .models import Staff, Payroll, SalarySlip
 from apps.superadmin.shifts.models import Shifts
 
 class StaffSerializer(serializers.ModelSerializer):
@@ -86,3 +86,34 @@ class StaffSerializer(serializers.ModelSerializer):
         except Shifts.DoesNotExist:
             raise serializers.ValidationError(f"Shift timing selection with ID '{value}' does not exist.")
         return value.strip()
+
+
+class PayrollSerializer(serializers.ModelSerializer):
+    staffName = serializers.CharField(source='staff.name', read_only=True)
+    staffCode = serializers.CharField(source='staff.staff_code', read_only=True)
+    staffDept = serializers.CharField(source='staff.dept', read_only=True)
+    basicSalary = serializers.DecimalField(source='basic_salary', max_digits=10, decimal_places=2, coerce_to_string=False)
+    overtimeRate = serializers.DecimalField(source='overtime_rate', max_digits=10, decimal_places=2, coerce_to_string=False)
+
+    class Meta:
+        model = Payroll
+        fields = [
+            'id', 'staff', 'staffName', 'staffCode', 'staffDept',
+            'basicSalary', 'allowances', 'deductions', 'overtimeRate',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'staffName', 'staffCode', 'staffDept']
+
+
+class SalarySlipSerializer(serializers.ModelSerializer):
+    staffName = serializers.CharField(source='staff.name', read_only=True)
+    staffCode = serializers.CharField(source='staff.staff_code', read_only=True)
+    totalPaid = serializers.DecimalField(source='total_paid', max_digits=10, decimal_places=2, coerce_to_string=False)
+
+    class Meta:
+        model = SalarySlip
+        fields = [
+            'id', 'staff', 'staffName', 'staffCode', 
+            'month', 'year', 'totalPaid', 'status', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'staffName', 'staffCode']
