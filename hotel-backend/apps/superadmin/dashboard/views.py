@@ -20,9 +20,11 @@ class DashboardAPIView(APIView):
         active_bookings_count = Booking.objects.filter(status__in=['Confirmed', 'Checked-In']).count()
         scheduled_today = Booking.objects.filter(status='Confirmed').count() # simple heuristic
 
-        # 3. Staff on Shift (Force Railway Redeploy)
+        # 3. Staff on Shift dynamically calculated via StaffService
         total_staff = Staff.objects.count()
-        staff_on_shift = Staff.objects.filter(is_checked_in=True).count()
+        
+        from apps.superadmin.staff.services import StaffService
+        staff_on_shift = sum(1 for member in Staff.objects.all() if StaffService.is_staff_on_duty(member))
 
         # 4. Average Occupancy (Active Bookings / Total Rooms) * 100
         total_rooms = Rooms.objects.count()
