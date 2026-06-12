@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchPayrollConfigs, fetchSalarySlips, generateSalarySlips, updateSalarySlipStatus } from '../../api/payroll';
-import { fetchStaffDirectory } from '../../api/staff';
+import { getStaff } from '../../api/staff';
 import { FiDollarSign, FiCheckCircle, FiClock, FiSettings, FiX } from 'react-icons/fi';
 
 const PayrollPage = () => {
@@ -23,11 +23,11 @@ const PayrollPage = () => {
         setLoading(true);
         try {
             const [staffRes, payrollRes, slipRes] = await Promise.all([
-                fetchStaffDirectory(),
+                getStaff(),
                 fetchPayrollConfigs(),
                 fetchSalarySlips(selectedMonth, selectedYear)
             ]);
-            setStaff(staffRes?.data || []);
+            setStaff(staffRes?.data?.staff || []);
             setPayrolls(payrollRes?.data || []);
             setSlips(slipRes?.data || []);
         } catch (error) {
@@ -185,7 +185,7 @@ const PayrollPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {staff.map(member => {
+                            {Array.isArray(staff) && staff.map(member => {
                                 const config = payrolls.find(p => p.staff === member.id) || { basicSalary: 0, allowances: 0, deductions: 0 };
                                 return (
                                     <tr key={member.id} className="border-b border-slate-100 hover:bg-slate-50">
