@@ -47,16 +47,16 @@ class StaffValidator:
                 errors['email'] = "Please provide a valid email address."
                 
         # 5. Contact phone numbers (mandatory)
-        phone_no = data.get('phoneNo', '').strip()
+        phone_no = data.get('phone_no', '').strip()
         if not phone_no and not is_update:
             errors['phone'] = "Contact phone number is required."
             
-        emergency_no = data.get('emergencyNo', '').strip()
+        emergency_no = data.get('emergency_no', '').strip()
         if not emergency_no and not is_update:
             errors['emergencyPhone'] = "Emergency contact phone is required."
             
         # 6. Shift schedules (mandatory)
-        shift_id = data.get('shift_id', '')
+        shift_id = data.get('shift', '')
         if not shift_id and not is_update:
             errors['shiftId'] = "Roster Shift selection is required."
             
@@ -65,7 +65,7 @@ class StaffValidator:
         if not address and not is_update:
             errors['address'] = "Physical Address is required."
             
-        govt_proof_id = data.get('govtProofId', '').strip()
+        govt_proof_id = data.get('govt_proof_id', '').strip()
         if not govt_proof_id and not is_update:
             errors['govtProofId'] = "Government ID proof number is required."
 

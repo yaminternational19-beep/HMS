@@ -11,14 +11,22 @@ export const getStaff = (params = {}) => {
  * Onboards and registers a new staff agent in the system.
  */
 export const createStaff = (staffData) => {
-  return axiosInstance.post('/staff/', staffData);
+  return axiosInstance.post('/staff/', staffData, {
+    headers: {
+      'Content-Type': undefined
+    }
+  });
 };
 
 /**
  * Updates an existing staff agent's details by their ID (e.g. STF-01).
  */
 export const updateStaff = (staffId, staffData) => {
-  return axiosInstance.put(`/staff/${staffId}/`, staffData);
+  return axiosInstance.put(`/staff/${staffId}/`, staffData, {
+    headers: {
+      'Content-Type': undefined
+    }
+  });
 };
 
 /**

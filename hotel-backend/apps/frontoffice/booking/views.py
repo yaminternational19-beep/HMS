@@ -302,7 +302,10 @@ def upload_document(request):
         subfolder_name = f'bookings/{booking_code}' if booking_code else 'bookings/general'
         
         path = UploadService.upload_single_file(uploaded_file, subfolder=subfolder_name)
-        full_url = f"http://localhost:8000{path}"
+        
+        import os
+        backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8000')
+        full_url = path if path.startswith('http') else f"{backend_url}{path}"
         return success_response(
             message="File uploaded successfully.",
             data={"url": full_url, "name": uploaded_file.name},

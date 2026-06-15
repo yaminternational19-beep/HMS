@@ -299,9 +299,8 @@ const BookingDetailModal = ({ isOpen, onClose, booking, onCheckIn, onCheckOut, o
               </div>
             </div>
 
-            {/* Emergency & Extras */}
+            {/* Emergency & Extras  (Commented out as requested)
             <div className="flex flex-col gap-6">
-              {/* Emergency Contact */}
               <div className="bg-white rounded-xl border border-slate-150 p-5 space-y-3 shadow-sm flex-1">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Emergency Contact</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -320,7 +319,6 @@ const BookingDetailModal = ({ isOpen, onClose, booking, onCheckIn, onCheckOut, o
                 </div>
               </div>
 
-              {/* Extra Preferences */}
               <div className="bg-white rounded-xl border border-slate-150 p-5 space-y-3 shadow-sm">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Preferences & Logistics</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -339,6 +337,7 @@ const BookingDetailModal = ({ isOpen, onClose, booking, onCheckIn, onCheckOut, o
                 </div>
               </div>
             </div>
+            */}
           </div>
 
           {/* Section 4: Additional Guests */}

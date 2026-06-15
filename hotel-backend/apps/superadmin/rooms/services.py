@@ -19,9 +19,11 @@ class RoomService:
         if not room:
             return {}
             
+        import os
+        backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8000')
         # Transform relative paths to absolute backend host URLs so the React frontend can load them
         formatted_images = [
-            f"http://localhost:8000{img}" if isinstance(img, str) and img.startswith('/uploads/') else img
+            f"{backend_url}{img}" if isinstance(img, str) and img.startswith('/uploads/') else img
             for img in (room.images or [])
         ]
 
