@@ -50,9 +50,11 @@ class FrontOfficeRoomService:
         db_status = room.status.lower() if room.status else 'available'
         fe_status = STATUS_MAP_DB_TO_FE.get(db_status, db_status.title())
 
+        import os
+        backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8000')
         # Format upload image paths to absolute URLs
         formatted_images = [
-            f"http://localhost:8000{img}" if isinstance(img, str) and img.startswith('/uploads/') else img
+            f"{backend_url}{img}" if isinstance(img, str) and img.startswith('/uploads/') else img
             for img in (room.images or [])
         ]
 

@@ -12,33 +12,33 @@ class UploadService:
     @staticmethod
     def upload_single_file(uploaded_file, subfolder: str = 'general') -> str:
         """
-        Saves a single uploaded file (from request.FILES) to the uploads root.
+        Saves a single uploaded file using Django's default storage (supports Cloudinary).
         
         @param uploaded_file: The file object from request.FILES
         @param subfolder: Subdirectory name (e.g., 'rooms', 'staff')
-        @return: Relative URL path (e.g., '/uploads/rooms/unique_name.jpg') to store in DB
+        @return: URL path to store in DB
         """
         if not uploaded_file:
             return ""
 
-        # 1. Establish directory path (e.g., C:/.../hotel-backend/uploads/rooms/)
-        upload_dir = os.path.join(settings.MEDIA_ROOT, subfolder)
-        os.makedirs(upload_dir, exist_ok=True)
+        from django.core.files.storage import default_storage
+        import os
 
-        # 2. Extract and sanitize file extension
+        # Extract and sanitize file extension
         orig_name = uploaded_file.name
         ext = os.path.splitext(orig_name)[1].lower()
 
-        # 3. Generate globally unique filename to avoid system collisions (e.g., UUID + extension)
+        # Generate globally unique filename to avoid system collisions (e.g., UUID + extension)
         unique_filename = f"{uuid.uuid4().hex}{ext}"
+        
+        # Define the path within the storage (e.g. 'rooms/12345.jpg')
+        file_path = f"{subfolder}/{unique_filename}"
 
-        # 4. Save file to disk using Django's FileSystemStorage
-        fs = FileSystemStorage(location=upload_dir, base_url=f"{settings.MEDIA_URL}{subfolder}/")
-        saved_name = fs.save(unique_filename, uploaded_file)
+        # Save file using Django's configured default storage (could be Cloudinary or local)
+        saved_path = default_storage.save(file_path, uploaded_file)
 
-        # 5. Build and return the database-facing public URL
-        # E.g., '/uploads/rooms/unique_name.jpg'
-        return f"{settings.MEDIA_URL}{subfolder}/{saved_name}"
+        # Return the public URL
+        return default_storage.url(saved_path)
 
     @classmethod
     def upload_multiple_files(cls, uploaded_files_list, subfolder: str = 'general') -> list:

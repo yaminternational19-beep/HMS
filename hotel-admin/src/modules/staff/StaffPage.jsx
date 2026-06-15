@@ -33,11 +33,11 @@ const StaffPage = () => {
   const [email, setEmail] = useState('');
   
   // Country Code Phone states
-  const [phoneCountry, setPhoneCountry] = useState('+971');
+  const [phoneCountry, setPhoneCountry] = useState('+91');
   const [phoneNo, setPhoneNo] = useState('');
 
   // Emergency contact states
-  const [emergencyCountry, setEmergencyCountry] = useState('+971');
+  const [emergencyCountry, setEmergencyCountry] = useState('+91');
   const [emergencyNo, setEmergencyNo] = useState('');
 
   // Shift assignment state
@@ -45,7 +45,7 @@ const StaffPage = () => {
 
   const [status, setStatus] = useState('active');
   const [address, setAddress] = useState('');
-  const [govtProofType, setGovtProofType] = useState('Passport');
+  const [govtProofType, setGovtProofType] = useState('pan');
   const [govtProofId, setGovtProofId] = useState('');
   const [govtProofFileName, setGovtProofFileName] = useState('');
   const [govtProofFileUrl, setGovtProofFileUrl] = useState('');
@@ -113,21 +113,21 @@ const StaffPage = () => {
       if (editingMember) {
         setName(editingMember.name);
         setDept(editingMember.dept);
-        setPassword(editingMember.password || '');
+        setPassword(''); // Do not pre-fill hashed password
         setEmail(editingMember.email || '');
         
         // Set Contact Phone
-        setPhoneCountry(editingMember.phoneCountry || '+971');
+        setPhoneCountry(editingMember.phoneCountry || '+91');
         setPhoneNo(editingMember.phoneNo || '');
 
         // Set Emergency Contact Phone
-        setEmergencyCountry(editingMember.emergencyCountry || '+971');
+        setEmergencyCountry(editingMember.emergencyCountry || '+91');
         setEmergencyNo(editingMember.emergencyNo || '');
 
         setShiftId(editingMember.shiftId || '');
         setStatus(editingMember.status);
         setAddress(editingMember.address || '');
-        setGovtProofType(editingMember.govtProofType || 'Passport');
+        setGovtProofType(editingMember.govtProofType || 'pan');
         setGovtProofId(editingMember.govtProofId || '');
         setGovtProofFileName(editingMember.govtProofFileName || '');
         setGovtProofFileUrl(editingMember.govtProofFileUrl || '');
@@ -139,14 +139,14 @@ const StaffPage = () => {
         setDept('');
         setPassword('');
         setEmail('');
-        setPhoneCountry('+971');
+        setPhoneCountry('+91');
         setPhoneNo('');
-        setEmergencyCountry('+971');
+        setEmergencyCountry('+91');
         setEmergencyNo('');
         setShiftId('');
         setStatus('active');
         setAddress('');
-        setGovtProofType('Passport');
+        setGovtProofType('pan');
         setGovtProofId('');
         setGovtProofFileName('');
         setGovtProofFileUrl('');
@@ -165,7 +165,7 @@ const StaffPage = () => {
     const isComplianceRole = 
       dept && (dept.toLowerCase().includes('front') || dept.toLowerCase().includes('maintain'));
     
-    if (isComplianceRole && !password.trim()) {
+    if (isComplianceRole && !password.trim() && !editingMember) {
       newErrors.password = 'HMS Operation Password is required for operational roles.';
     }
     
@@ -254,6 +254,8 @@ const StaffPage = () => {
         if (res && res.success) {
           addToast(`Staff profile for ${name.trim()} updated successfully.`, 'success');
           fetchStaff();
+          setIsFormOpen(false);
+          setEditingMember(null);
         }
       } catch (err) {
         console.error(err);
@@ -267,6 +269,8 @@ const StaffPage = () => {
         if (res && res.success) {
           addToast(`Staff member ${name.trim()} onboarded successfully! Assigned ID: ${res.data.id}.`, 'success');
           fetchStaff();
+          setIsFormOpen(false);
+          setEditingMember(null);
         }
       } catch (err) {
         console.error(err);
@@ -274,9 +278,6 @@ const StaffPage = () => {
         addToast(errMsg, 'error');
       }
     }
-
-    setIsFormOpen(false);
-    setEditingMember(null);
   };
 
   // Offboard Delete Handler

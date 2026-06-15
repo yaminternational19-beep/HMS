@@ -73,10 +73,10 @@ class AuthAPITestCase(TestCase):
 
     def test_staff_login_success_by_id(self):
         url = reverse('staff_login')
-        # Sarah Connor (Front Desk Manager, ID STF-02, password SarahHMS2026)
+        # Sarah Connor (Front Desk Manager, ID STF-02, password admin123)
         payload = {
             "staffCode": "STF-02",
-            "password": "SarahHMS2026"
+            "password": "admin123"
         }
         response = self.client.post(url, data=payload, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -88,7 +88,7 @@ class AuthAPITestCase(TestCase):
         # Sarah Connor uniqueCode is 29384756
         payload = {
             "staffCode": "29384756",
-            "password": "SarahHMS2026"
+            "password": "admin123"
         }
         response = self.client.post(url, data=payload, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -133,7 +133,7 @@ class AuthAPITestCase(TestCase):
         url = reverse('staff_login')
         payload = {
             "staffCode": "STF-02",
-            "password": "SarahHMS2026"
+            "password": "admin123"
         }
         response = self.client.post(url, data=payload, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

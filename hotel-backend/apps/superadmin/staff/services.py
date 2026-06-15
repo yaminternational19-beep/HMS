@@ -235,27 +235,33 @@ class StaffService:
         unique_code = cls.generate_unique_code()
 
         # Resolve Shift relationship
-        shift_id = data.get('shift_id', '').strip()
-        try:
-            shift_instance = Shifts.objects.get(shift_code=shift_id)
-        except Shifts.DoesNotExist:
-            raise ValueError(f"Shift timing selection with ID '{shift_id}' does not exist.")
+        shift_id = data.get('shift', '')
+        if hasattr(shift_id, 'shift_code'):
+            shift_instance = shift_id
+        else:
+            try:
+                shift_instance = Shifts.objects.get(shift_code=str(shift_id).strip())
+            except Shifts.DoesNotExist:
+                raise ValueError(f"Shift timing selection with ID '{shift_id}' does not exist.")
 
         # Process binary scans uploads
         profile_file = files.get('profileFile') if files else None
-        profile_file_name = data.get('profileFileName', '').strip() if data.get('profileFileName') else None
-        profile_file_url = data.get('profileFileUrl', '').strip() if data.get('profileFileUrl') else None
+        profile_file_name = data.get('profile_file_name', '').strip() if data.get('profile_file_name') else None
+        profile_file_url = data.get('profile_file_url', '').strip() if data.get('profile_file_url') else None
+        import os
+        backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8000')
+
         if profile_file:
             path = UploadService.upload_single_file(profile_file, subfolder=f"staff/{unique_code}")
-            profile_file_url = f"http://localhost:8000{path}"
+            profile_file_url = path if path.startswith('http') else f"{backend_url}{path}"
             profile_file_name = profile_file.name
 
         govt_file = files.get('govtProofFile') if files else None
-        govt_file_name = data.get('govtProofFileName', '').strip() if data.get('govtProofFileName') else None
-        govt_file_url = data.get('govtProofFileUrl', '').strip() if data.get('govtProofFileUrl') else None
+        govt_file_name = data.get('govt_proof_file_name', '').strip() if data.get('govt_proof_file_name') else None
+        govt_file_url = data.get('govt_proof_file_url', '').strip() if data.get('govt_proof_file_url') else None
         if govt_file:
             path = UploadService.upload_single_file(govt_file, subfolder=f"staff/{unique_code}")
-            govt_file_url = f"http://localhost:8000{path}"
+            govt_file_url = path if path.startswith('http') else f"{backend_url}{path}"
             govt_file_name = govt_file.name
 
         member = Staff(
@@ -265,20 +271,20 @@ class StaffService:
             dept=data.get('dept', '').strip(),
             password=make_password(data.get('password', '').strip()) if data.get('password') else None,
             email=data.get('email', '').strip() if data.get('email') else None,
-            phone_country=data.get('phoneCountry', '+971').strip(),
-            phone_no=data.get('phoneNo', '').strip(),
-            emergency_country=data.get('emergencyCountry', '+971').strip(),
-            emergency_no=data.get('emergencyNo', '').strip(),
+            phone_country=data.get('phone_country', '+91').strip(),
+            phone_no=data.get('phone_no', '').strip(),
+            emergency_country=data.get('emergency_country', '+91').strip(),
+            emergency_no=data.get('emergency_no', '').strip(),
             shift=shift_instance,
             status=data.get('status', 'active').strip(),
             address=data.get('address', '').strip(),
-            govt_proof_type=data.get('govtProofType', 'Passport').strip(),
-            govt_proof_id=data.get('govtProofId', '').strip(),
+            govt_proof_type=data.get('govt_proof_type', 'pan').strip(),
+            govt_proof_id=data.get('govt_proof_id', '').strip(),
             govt_proof_file_name=govt_file_name,
             govt_proof_file_url=govt_file_url,
             profile_file_name=profile_file_name,
             profile_file_url=profile_file_url,
-            is_checked_in=data.get('isCheckedIn', False)
+            is_checked_in=data.get('is_checked_in', False)
         )
         member.save()
         return cls.serialize_staff(member)
@@ -302,59 +308,65 @@ class StaffService:
             member.name = data['name'].strip()
         if 'dept' in data:
             member.dept = data['dept'].strip()
-        if 'password' in data:
-            member.password = make_password(data['password'].strip()) if data['password'] else None
+        if 'password' in data and data['password'].strip():
+            member.password = make_password(data['password'].strip())
         if 'email' in data:
             member.email = data['email'].strip() if data['email'] else None
-        if 'phoneCountry' in data:
-            member.phone_country = data['phoneCountry'].strip()
-        if 'phoneNo' in data:
-            member.phone_no = data['phoneNo'].strip()
-        if 'emergencyCountry' in data:
-            member.emergency_country = data['emergencyCountry'].strip()
-        if 'emergencyNo' in data:
-            member.emergency_no = data['emergencyNo'].strip()
+        if 'phone_country' in data:
+            member.phone_country = data['phone_country'].strip()
+        if 'phone_no' in data:
+            member.phone_no = data['phone_no'].strip()
+        if 'emergency_country' in data:
+            member.emergency_country = data['emergency_country'].strip()
+        if 'emergency_no' in data:
+            member.emergency_no = data['emergency_no'].strip()
         if 'status' in data:
             member.status = data['status'].strip()
         if 'address' in data:
             member.address = data['address'].strip()
-        if 'govtProofType' in data:
-            member.govt_proof_type = data['govtProofType'].strip()
-        if 'govtProofId' in data:
-            member.govt_proof_id = data['govtProofId'].strip()
-        if 'isCheckedIn' in data:
-            member.is_checked_in = data['isCheckedIn']
+        if 'govt_proof_type' in data:
+            member.govt_proof_type = data['govt_proof_type'].strip()
+        if 'govt_proof_id' in data:
+            member.govt_proof_id = data['govt_proof_id'].strip()
+        if 'is_checked_in' in data:
+            member.is_checked_in = data['is_checked_in']
+
+        import os
+        backend_url = os.environ.get('BACKEND_URL', 'http://localhost:8000')
 
         # Process binary scans uploads
         profile_file = files.get('profileFile') if files else None
         if profile_file:
             path = UploadService.upload_single_file(profile_file, subfolder=f"staff/{member.unique_code}")
-            member.profile_file_url = f"http://localhost:8000{path}"
+            member.profile_file_url = path if path.startswith('http') else f"{backend_url}{path}"
             member.profile_file_name = profile_file.name
         else:
-            if 'profileFileName' in data:
-                member.profile_file_name = data['profileFileName'].strip() if data['profileFileName'] else None
-            if 'profileFileUrl' in data:
-                member.profile_file_url = data['profileFileUrl'].strip() if data['profileFileUrl'] else None
+            if 'profile_file_name' in data:
+                member.profile_file_name = data['profile_file_name'].strip() if data['profile_file_name'] else None
+            if 'profile_file_url' in data:
+                member.profile_file_url = data['profile_file_url'].strip() if data['profile_file_url'] else None
 
         govt_file = files.get('govtProofFile') if files else None
         if govt_file:
             path = UploadService.upload_single_file(govt_file, subfolder=f"staff/{member.unique_code}")
-            member.govt_proof_file_url = f"http://localhost:8000{path}"
+            member.govt_proof_file_url = path if path.startswith('http') else f"{backend_url}{path}"
             member.govt_proof_file_name = govt_file.name
         else:
-            if 'govtProofFileName' in data:
-                member.govt_proof_file_name = data['govtProofFileName'].strip() if data['govtProofFileName'] else None
-            if 'govtProofFileUrl' in data:
-                member.govt_proof_file_url = data['govtProofFileUrl'].strip() if data['govtProofFileUrl'] else None
+            if 'govt_proof_file_name' in data:
+                member.govt_proof_file_name = data['govt_proof_file_name'].strip() if data['govt_proof_file_name'] else None
+            if 'govt_proof_file_url' in data:
+                member.govt_proof_file_url = data['govt_proof_file_url'].strip() if data['govt_proof_file_url'] else None
 
-        if 'shift_id' in data:
-            shift_id = data['shift_id'].strip()
-            try:
-                shift_instance = Shifts.objects.get(shift_code=shift_id)
-                member.shift = shift_instance
-            except Shifts.DoesNotExist:
-                raise ValueError(f"Shift timing selection with ID '{shift_id}' does not exist.")
+        if 'shift' in data:
+            shift_id = data['shift']
+            if hasattr(shift_id, 'shift_code'):
+                member.shift = shift_id
+            else:
+                try:
+                    shift_instance = Shifts.objects.get(shift_code=str(shift_id).strip())
+                    member.shift = shift_instance
+                except Shifts.DoesNotExist:
+                    raise ValueError(f"Shift timing selection with ID '{shift_id}' does not exist.")
 
         member.save()
         return cls.serialize_staff(member)

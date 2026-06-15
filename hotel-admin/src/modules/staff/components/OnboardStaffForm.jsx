@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Camera, Eye, EyeOff } from 'lucide-react';
+import PhoneInputPkg from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import ActionButton from '../../../components/ActionButton';
-import CountryCodeSelect from '../../../components/CountryCodeSelect';
+
+const PhoneInput = PhoneInputPkg.default ? PhoneInputPkg.default : PhoneInputPkg;
 
 const DEFAULT_ROLES = [
   'Corporate Director',
@@ -244,13 +247,15 @@ const OnboardStaffForm = ({
             {/* Conditional Operational HMS Password (for Maintenance & Front Office roles only) */}
             {dept && (dept.toLowerCase().includes('front') || dept.toLowerCase().includes('maintain')) && (
               <div className="space-y-1 mb-4 animate-fade-in relative">
-                <label className="form-label" htmlFor="staffPassword">HMS Operation Password *</label>
+                <label className="form-label" htmlFor="staffPassword">
+                  HMS Operation Password {editingMember ? '(Optional)' : '*'}
+                </label>
                 <div className="relative flex items-center">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="staffPassword"
                     value={password || ''}
-                    placeholder="Enter operation password"
+                    placeholder={editingMember ? "Leave empty to keep current password" : "Enter operation password"}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`form-input pr-10 ${errors.password ? 'form-input-error' : ''}`}
                   />
@@ -289,18 +294,19 @@ const OnboardStaffForm = ({
               {/* Phone (Mandatory) */}
               <div>
                 <label className="form-label" htmlFor="staffPhone">Contact Phone *</label>
-                <div className="flex gap-2">
-                  <CountryCodeSelect 
-                    value={phoneCountry} 
-                    onChange={setPhoneCountry} 
-                  />
-                  <input
-                    type="text"
-                    id="staffPhone"
-                    value={phoneNo}
-                    placeholder="50 123 4567"
-                    onChange={(e) => setPhoneNo(e.target.value.replace(/[^0-9\s-]/g, ''))}
-                    className={`form-input flex-1 ${errors.phone ? 'form-input-error' : ''}`}
+                <div className="flex w-full phone-input-container">
+                  <PhoneInput
+                    country={'in'}
+                    value={(phoneCountry ? phoneCountry.replace('+', '') : '') + (phoneNo || '')}
+                    onChange={(value, data) => {
+                      if (data && data.dialCode) {
+                        setPhoneCountry(`+${data.dialCode}`);
+                        setPhoneNo(value.slice(data.dialCode.length));
+                      }
+                    }}
+                    inputClass={`!w-full !h-10 !text-sm !rounded-md !border-slate-300 focus:!border-blue-500 focus:!ring-1 focus:!ring-blue-500 ${errors.phone ? '!border-red-500' : ''}`}
+                    buttonClass={`!border-slate-300 !rounded-l-md !bg-slate-50 ${errors.phone ? '!border-red-500' : ''}`}
+                    containerClass="!w-full"
                   />
                 </div>
                 {errors.phone && (
@@ -311,18 +317,19 @@ const OnboardStaffForm = ({
               {/* Emergency Contact Phone (Mandatory) */}
               <div>
                 <label className="form-label" htmlFor="emergencyPhone">Emergency Contact *</label>
-                <div className="flex gap-2">
-                  <CountryCodeSelect 
-                    value={emergencyCountry} 
-                    onChange={setEmergencyCountry} 
-                  />
-                  <input
-                    type="text"
-                    id="emergencyPhone"
-                    value={emergencyNo}
-                    placeholder="50 987 6543"
-                    onChange={(e) => setEmergencyNo(e.target.value.replace(/[^0-9\s-]/g, ''))}
-                    className={`form-input flex-1 ${errors.emergencyPhone ? 'form-input-error' : ''}`}
+                <div className="flex w-full phone-input-container">
+                  <PhoneInput
+                    country={'in'}
+                    value={(emergencyCountry ? emergencyCountry.replace('+', '') : '') + (emergencyNo || '')}
+                    onChange={(value, data) => {
+                      if (data && data.dialCode) {
+                        setEmergencyCountry(`+${data.dialCode}`);
+                        setEmergencyNo(value.slice(data.dialCode.length));
+                      }
+                    }}
+                    inputClass={`!w-full !h-10 !text-sm !rounded-md !border-slate-300 focus:!border-blue-500 focus:!ring-1 focus:!ring-blue-500 ${errors.emergencyPhone ? '!border-red-500' : ''}`}
+                    buttonClass={`!border-slate-300 !rounded-l-md !bg-slate-50 ${errors.emergencyPhone ? '!border-red-500' : ''}`}
+                    containerClass="!w-full"
                   />
                 </div>
                 {errors.emergencyPhone && (
@@ -394,10 +401,10 @@ const OnboardStaffForm = ({
                   onChange={(e) => setGovtProofType(e.target.value)}
                   className="form-select"
                 >
-                  <option value="Passport">Passport</option>
-                  <option value="National ID">National ID</option>
-                  <option value="Driver License">Driver's License</option>
-                  <option value="Social Security">Social Security Number</option>
+                  <option value="pan">PAN</option>
+                  <option value="aadhar">Aadhar</option>
+                  <option value="driving lisce">Driving License</option>
+                  <option value="passport">Passport</option>
                 </select>
               </div>
 

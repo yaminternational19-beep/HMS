@@ -7,7 +7,7 @@ import { setCookie } from '../api/cookieHelper';
 
 const Login = () => {
   const [staffCode, setStaffCode] = useState('STF-02');
-  const [password, setPassword] = useState('SarahHMS2026');
+  const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);

@@ -4,10 +4,12 @@ import StatsCard from '../../../components/global/stats/StatsCard';
 import StatsGrid from '../../../components/global/stats/StatsGrid';
 
 const OperationsStats = ({ stats = {} }) => {
-  const pendingArrivals = stats.pendingArrivals || 0;
-  const checkedIn = stats.pendingDepartures || 0; // Number of in-house guests
-  const pendingDepartures = stats.pendingDepartures || 0;
-  const checkedOut = stats.checkedOut || 0;
+  const arrivals = stats.arrivals !== undefined ? stats.arrivals : 0;
+  const pendingArrivals = stats.pendingArrivals !== undefined ? stats.pendingArrivals : 0;
+  
+  const departures = stats.departures !== undefined ? stats.departures : 0;
+  const pendingDepartures = stats.pendingDepartures !== undefined ? stats.pendingDepartures : 0;
+
   const pendingCollections = stats.pendingCollections || 0;
   const guestsWithBalance = stats.guestsWithBalance || 0;
 
@@ -15,24 +17,24 @@ const OperationsStats = ({ stats = {} }) => {
     <StatsGrid>
       <StatsCard
         title="Arrivals"
-        value={pendingArrivals}
+        value={arrivals}
         icon={<MdLogin size={20} />}
         theme="blue"
-        subtitle={`${checkedIn} in-house`}
+        subtitle={`${pendingArrivals} pending`}
       />
       <StatsCard
         title="Departures"
-        value={pendingDepartures}
+        value={departures}
         icon={<MdLogout size={20} />}
         theme="amber"
-        subtitle={`${checkedOut} checked out`}
+        subtitle={`${pendingDepartures} pending`}
       />
       <StatsCard
         title="Available Rooms"
-        value={12}
+        value={stats.availableRooms !== undefined ? stats.availableRooms : 0}
         icon={<MdMeetingRoom size={20} />}
         theme="emerald"
-        subtitle="of 48 total rooms"
+        subtitle={`of ${stats.totalRooms !== undefined ? stats.totalRooms : 0} total rooms`}
       />
       <StatsCard
         title="Pending Collections"

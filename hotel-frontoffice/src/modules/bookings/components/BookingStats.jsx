@@ -35,7 +35,7 @@ const BookingStats = ({ data = [], stats = {} }) => {
       />
       <StatsCard
         title="Pending Checkouts"
-        value={pendingCheckout || 3}
+        value={pendingCheckout}
         icon={<MdLogout size={20} />}
         theme="red"
         subtitle="Departures outstanding"

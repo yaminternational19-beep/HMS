@@ -87,13 +87,23 @@ class BookingService:
         checked_out = Booking.objects.filter(status='Checked-Out').count()
         cancelled = Booking.objects.filter(status='Cancelled').count()
         
+        from django.utils import timezone
+        today = timezone.localdate()
+        
         from django.db.models import Sum
         checked_in_guests = Booking.objects.filter(status='Checked-In').aggregate(Sum('total_guests'))['total_guests__sum'] or 0
         
-        arrivals_count = Booking.objects.filter(status__in=['Confirmed', 'Pending', 'Checked-In']).count()
-        departures_count = Booking.objects.filter(status__in=['Checked-In', 'Checked-Out']).count()
-        pending_checkouts = Booking.objects.filter(status='Checked-In').count()
+        arrivals_count = Booking.objects.filter(check_in__date=today).exclude(status='Cancelled').count()
+        departures_count = Booking.objects.filter(check_out__date=today).exclude(status='Cancelled').count()
+        
+        pending_arrivals = Booking.objects.filter(check_in__date=today, status__in=['Confirmed', 'Pending']).count()
+        pending_departures = Booking.objects.filter(check_out__date=today, status='Checked-In').count()
+        pending_checkouts = Booking.objects.filter(check_out__date=today, status='Checked-In').count()
         reserved_rooms = confirmed
+        
+        from apps.superadmin.rooms.models import Rooms
+        total_rooms = Rooms.objects.count()
+        available_rooms = Rooms.objects.filter(status='available').count()
 
         # Calculate pending collections and guests with balance
         pending_collections = 0.0
@@ -115,15 +125,17 @@ class BookingService:
             "pendingCheckout": pending_checkouts,
             "arrivals": arrivals_count,
             "departures": departures_count,
-            "pendingArrivals": confirmed + pending,
-            "pendingDepartures": checked_in,
+            "pendingArrivals": pending_arrivals,
+            "pendingDepartures": pending_departures,
             "pendingCollections": pending_collections,
             "guestsWithBalance": guests_with_balance,
             "reserved": reserved_rooms,
             "pending": pending,
             "confirmed": confirmed,
             "checkedOut": checked_out,
-            "cancelled": cancelled
+            "cancelled": cancelled,
+            "totalRooms": total_rooms,
+            "availableRooms": available_rooms
         }
 
         # 2. Apply filters
