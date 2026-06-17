@@ -1,8 +1,16 @@
 from django.urls import path
-from .views import CategoryListView, ItemListView, ItemDetailView
+from .views import (
+    CategoryListView, UnitListView, VendorListView, ItemListView,
+    PurchaseView, IssueView, WastageView, DashboardStatsView
+)
 
 urlpatterns = [
-    path('categories/', CategoryListView.as_view(), name='inventory-categories'),
-    path('items/', ItemListView.as_view(), name='inventory-items'),
-    path('items/<int:item_id>/', ItemDetailView.as_view(), name='inventory-item-detail'),
+    path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('units/', UnitListView.as_view(), name='unit-list'),
+    path('vendors/', VendorListView.as_view(), name='vendor-list'),
+    path('items/', ItemListView.as_view(), name='item-list'),
+    path('purchase/', PurchaseView.as_view(), name='record-purchase'),
+    path('issue/', IssueView.as_view(), name='record-issue'),
+    path('wastage/', WastageView.as_view(), name='record-wastage'),
+    path('dashboard/', DashboardStatsView.as_view(), name='dashboard-stats'),
 ]

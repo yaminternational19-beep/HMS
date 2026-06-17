@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from core.response.api_response import success_response, error_response
 from .services import InventoryService
-from .validator import validate_inventory_item
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,68 +8,87 @@ logger = logging.getLogger(__name__)
 class CategoryListView(APIView):
     def get(self, request):
         try:
-            categories = InventoryService.get_all_categories()
-            return success_response("Categories fetched successfully", data=categories)
+            return success_response("Categories fetched", data=InventoryService.get_categories())
         except Exception as e:
-            logger.error(f"Error fetching categories: {str(e)}")
+            logger.error(str(e))
             return error_response("Failed to fetch categories")
 
     def post(self, request):
         try:
-            data = request.data
-            if not data.get('name'):
-                return error_response("Category name is required")
-            
-            category = InventoryService.create_category(data)
-            return success_response("Category created successfully", data=category, status_code=201)
+            return success_response("Category created", data=InventoryService.create_category(request.data), status_code=201)
         except Exception as e:
-            logger.error(f"Error creating category: {str(e)}")
+            return error_response(str(e))
+
+class UnitListView(APIView):
+    def get(self, request):
+        try:
+            return success_response("Units fetched", data=InventoryService.get_units())
+        except Exception as e:
+            logger.error(str(e))
+            return error_response("Failed to fetch units")
+
+    def post(self, request):
+        try:
+            return success_response("Unit created", data=InventoryService.create_unit(request.data), status_code=201)
+        except Exception as e:
+            return error_response(str(e))
+
+class VendorListView(APIView):
+    def get(self, request):
+        try:
+            return success_response("Vendors fetched", data=InventoryService.get_vendors())
+        except Exception as e:
+            logger.error(str(e))
+            return error_response("Failed to fetch vendors")
+
+    def post(self, request):
+        try:
+            return success_response("Vendor created", data=InventoryService.create_vendor(request.data), status_code=201)
+        except Exception as e:
             return error_response(str(e))
 
 class ItemListView(APIView):
     def get(self, request):
         try:
-            search_query = request.query_params.get('search')
-            items = InventoryService.get_all_items(search_query)
-            return success_response("Items fetched successfully", data=items)
+            return success_response("Items fetched", data=InventoryService.get_items())
         except Exception as e:
-            logger.error(f"Error fetching items: {str(e)}")
+            logger.error(str(e))
             return error_response("Failed to fetch items")
 
     def post(self, request):
         try:
-            data = request.data
-            if not data.get('name') or not data.get('categoryId') or not data.get('unit'):
-                return error_response("Name, categoryId, and unit are required fields")
-                
-            validate_inventory_item(data)
-            item = InventoryService.create_item(data)
-            return success_response("Item created successfully", data=item, status_code=201)
-        except ValueError as e:
-            return error_response(str(e))
+            return success_response("Item created", data=InventoryService.create_item(request.data), status_code=201)
         except Exception as e:
-            logger.error(f"Error creating item: {str(e)}")
-            return error_response("Failed to create item")
+            return error_response(str(e))
 
-class ItemDetailView(APIView):
-    def put(self, request, item_id):
+class PurchaseView(APIView):
+    def post(self, request):
         try:
-            data = request.data
-            validate_inventory_item(data)
-            item = InventoryService.update_item(item_id, data)
-            return success_response("Item updated successfully", data=item)
-        except ValueError as e:
-            return error_response(str(e))
+            return success_response("Purchase recorded", data=InventoryService.record_purchase(request.data), status_code=201)
         except Exception as e:
-            logger.error(f"Error updating item: {str(e)}")
-            return error_response("Failed to update item")
+            logger.error(str(e))
+            return error_response("Failed to record purchase")
 
-    def delete(self, request, item_id):
+class IssueView(APIView):
+    def post(self, request):
         try:
-            InventoryService.delete_item(item_id)
-            return success_response("Item deleted successfully")
-        except ValueError as e:
-            return error_response(str(e))
+            return success_response("Issue recorded", data=InventoryService.record_issue(request.data), status_code=201)
         except Exception as e:
-            logger.error(f"Error deleting item: {str(e)}")
-            return error_response("Failed to delete item")
+            logger.error(str(e))
+            return error_response("Failed to record issue")
+
+class WastageView(APIView):
+    def post(self, request):
+        try:
+            return success_response("Wastage recorded", data=InventoryService.record_wastage(request.data), status_code=201)
+        except Exception as e:
+            logger.error(str(e))
+            return error_response("Failed to record wastage")
+
+class DashboardStatsView(APIView):
+    def get(self, request):
+        try:
+            return success_response("Stats fetched", data=InventoryService.get_dashboard_stats())
+        except Exception as e:
+            logger.error(str(e))
+            return error_response("Failed to fetch stats")
