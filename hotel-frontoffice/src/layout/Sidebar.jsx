@@ -22,7 +22,7 @@ const navLinks = [
   { label: 'Rooms', path: '/rooms', icon: <MdKingBed size={20} /> },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -50,12 +50,22 @@ const Sidebar = () => {
     .toUpperCase() || 'SC';
 
   return (
-    <aside
-      className={`
-        flex flex-col bg-primary text-white h-screen transition-all duration-300 z-30
-        ${collapsed ? 'w-16' : 'w-52'}
-      `}
-    >
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+      
+      <aside
+        className={`
+          flex flex-col bg-primary text-white h-screen transition-all duration-300 z-50 fixed md:relative
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          ${collapsed ? 'w-16' : 'w-52'}
+        `}
+      >
       {/* Logo & Toggle */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-white/10 shrink-0">
         {!collapsed && (
@@ -122,6 +132,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
+    </>
   );
 };
 

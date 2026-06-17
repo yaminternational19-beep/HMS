@@ -69,7 +69,7 @@ const InvoiceDetailModal = ({ invoice, onClose, onMarkPaid }) => {
             <div>
               <p className="inv-modal-section-title">Stay Duration</p>
               <span className="inline-flex items-center px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded-md text-xs font-black uppercase tracking-wider mt-0.5">
-                {invoice.nights} Night{invoice.nights > 1 ? 's' : ''} Stayed
+                {invoice.nights} Day{invoice.nights > 1 ? 's' : ''} Stayed
               </span>
             </div>
           </div>

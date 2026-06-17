@@ -59,7 +59,7 @@ export const downloadInvoicePDF = (invoice) => {
 
   y += 5;
   doc.text(``, 14, y);
-  doc.text(`Duration:   ${invoice.nights} Night${invoice.nights > 1 ? 's' : ''}`, 110, y);
+  doc.text(`Duration:   ${invoice.nights} Day${invoice.nights > 1 ? 's' : ''}`, 110, y);
 
   // ─── DIVIDER ──────────────────────────────────────────────────────
   y += 10;
@@ -76,8 +76,8 @@ export const downloadInvoicePDF = (invoice) => {
 
   autoTable(doc, {
     startY: y,
-    head: [['Description', 'Amount (₹)']],
-    body: invoice.lineItems.map(item => [item.description, `₹${item.amount.toLocaleString()}`]),
+    head: [['Description', 'Amount (Rs.)']],
+    body: invoice.lineItems.map(item => [item.description, `Rs. ${item.amount.toLocaleString()}`]),
     theme: 'striped',
     headStyles: { fillColor: primary, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
     bodyStyles: { fontSize: 9, textColor: [50, 50, 50] },
@@ -89,12 +89,12 @@ export const downloadInvoicePDF = (invoice) => {
   const finalY = doc.lastAutoTable.finalY + 6;
 
   const totals = [
-    ['Sub Total', `₹${invoice.subTotal.toLocaleString()}`],
-    ...(invoice.discount > 0 ? [['Discount', `- ₹${invoice.discount.toLocaleString()}`]] : []),
-    ['GST (9%)', `₹${invoice.gst.toLocaleString()}`],
-    ['TOTAL AMOUNT', `₹${invoice.totalAmount.toLocaleString()}`],
-    ['Amount Paid', `₹${invoice.paidAmount.toLocaleString()}`],
-    ['Balance Due', `₹${invoice.balanceDue.toLocaleString()}`]
+    ['Sub Total', `Rs. ${invoice.subTotal.toLocaleString()}`],
+    ...(invoice.discount > 0 ? [['Discount', `- Rs. ${invoice.discount.toLocaleString()}`]] : []),
+    ['GST (9%)', `Rs. ${invoice.gst.toLocaleString()}`],
+    ['TOTAL AMOUNT', `Rs. ${invoice.totalAmount.toLocaleString()}`],
+    ['Amount Paid', `Rs. ${invoice.paidAmount.toLocaleString()}`],
+    ['Balance Due', `Rs. ${invoice.balanceDue.toLocaleString()}`]
   ];
 
   autoTable(doc, {
@@ -118,6 +118,35 @@ export const downloadInvoicePDF = (invoice) => {
     },
     margin: { left: 14, right: 14 }
   });
+
+  // ─── TRANSACTIONS SUMMARY ─────────────────────────────────────────
+  if (invoice.transactions && invoice.transactions.length > 0) {
+    let txnY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text('PAYMENT TRANSACTIONS', 14, txnY);
+    txnY += 4;
+
+    const txnHeaders = [['Date', 'Type', 'Method', 'Transaction ID', 'Amount']];
+    const txnRows = invoice.transactions.map(t => [
+      t.date || '',
+      t.type || '',
+      t.method || '',
+      t.id || '',
+      `Rs. ${(t.amount || 0).toLocaleString()}`
+    ]);
+
+    autoTable(doc, {
+      startY: txnY,
+      head: txnHeaders,
+      body: txnRows,
+      theme: 'grid',
+      headStyles: { fillColor: [240, 240, 240], textColor: [50, 50, 50], fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8, textColor: [50, 50, 50] },
+      margin: { left: 14, right: 14 }
+    });
+  }
 
   // ─── FOOTER ───────────────────────────────────────────────────────
   const footerY = doc.lastAutoTable.finalY + 14;

@@ -19,7 +19,7 @@ export const exportToExcel = (data = []) => {
     'Room Type',
     'Check In',
     'Check Out',
-    'Nights',
+    'Days',
     'Total Amount',
     'Balance Due',
     'Status'
@@ -88,7 +88,7 @@ export const exportToPDF = (data = []) => {
       inv.id || '',
       inv.guestName || '',
       `Room ${inv.roomNumber}`,
-      `${inv.nights} Nights`,
+      `${inv.nights} Days`,
       `Rs.${inv.totalAmount || 0}`,
       `Rs.${inv.balanceDue || 0}`,
       inv.status || ''

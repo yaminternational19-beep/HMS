@@ -15,8 +15,8 @@ class BookingSerializer(serializers.ModelSerializer):
     roomNumber = serializers.CharField(source='room_snapshot_number', max_length=50)
     roomType = serializers.CharField(source='room_snapshot_type', max_length=150)
     
-    checkIn = serializers.DateTimeField(source='check_in')
-    checkOut = serializers.DateTimeField(source='check_out')
+    checkIn = serializers.DateTimeField(source='check_in', format='%Y-%m-%d')
+    checkOut = serializers.DateTimeField(source='check_out', format='%Y-%m-%d')
     
     # Custom non-model fields for payments (handled in service layer)
     paymentStatus = serializers.CharField(required=False, default='Pending')

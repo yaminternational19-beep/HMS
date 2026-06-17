@@ -8,7 +8,7 @@ const AVATAR_COLORS = [
   'bg-purple-500', 'bg-teal-500', 'bg-pink-500'
 ];
 
-const CheckOutList = ({ departures, onCheckOut }) => {
+const CheckOutList = ({ departures, onCheckOut, onPayBalance }) => {
   const pending = departures.filter(d => d.status === 'Pending');
   const done = departures.filter(d => d.status === 'Checked-Out');
 
@@ -56,10 +56,15 @@ const CheckOutList = ({ departures, onCheckOut }) => {
 
               <div className="ops-actions">
                 {guest.balance > 0 ? (
-                  <span className="ops-balance-alert ops-balance-due">
-                    <MdWarning size={14} />
-                    Due Balance: ₹{guest.balance.toLocaleString()}
-                  </span>
+                  <>
+                    <span className="ops-balance-alert ops-balance-due">
+                      <MdWarning size={14} />
+                      Due: ₹{guest.balance.toLocaleString()}
+                    </span>
+                    <ActionButton variant="secondary" onClick={() => onPayBalance && onPayBalance(guest)}>
+                      Pay Balance
+                    </ActionButton>
+                  </>
                 ) : (
                   <span className="ops-balance-alert ops-balance-clear">
                     <MdCheckCircle size={14} />

@@ -450,8 +450,8 @@ const BookingForm = ({ isOpen, onClose, onSubmit, editingData }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <div>
+        <div className="flex justify-between items-start md:items-center gap-4 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex-1">
             <h3 className="text-lg font-bold text-slate-900">SNOWLINE BLOOM Guest Registration Portal</h3>
             <p className="text-xs text-slate-500 mt-0.5">Complete steps to register guests and assign reservation details.</p>
           </div>

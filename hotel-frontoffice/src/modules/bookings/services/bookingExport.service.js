@@ -256,7 +256,7 @@ export const exportPayslipToPDF = (payslipData) => {
     doc.text('Lodging Cost Statement', 14, 120);
 
     const body = [
-      [`Room Rent (${payslipData.nights} Nights x Rs.${(payslipData.roomRentPerNight || 0).toLocaleString('en-IN')})`, `Rs.${(payslipData.roomRentSubtotal || 0).toLocaleString('en-IN')}`],
+      [`Room Rent (${payslipData.nights} Days x Rs.${(payslipData.roomRentPerNight || 0).toLocaleString('en-IN')})`, `Rs.${(payslipData.roomRentSubtotal || 0).toLocaleString('en-IN')}`],
       [`Extra Charges (Amenity/Extra Bed)`, `Rs.${(payslipData.extraCharges || 0).toLocaleString('en-IN')}`],
       [`GST / Tax`, `Rs.${(payslipData.gst || 0).toLocaleString('en-IN')}`]
     ];
@@ -294,13 +294,46 @@ export const exportPayslipToPDF = (payslipData) => {
 
     // Transaction summary box
     const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFillColor(248, 250, 252);
-    doc.rect(14, finalY, 182, 12, 'F');
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Payment Method: ${payslipData.paymentMethod}`, 20, finalY + 7);
-    if (payslipData.transactionId) {
-      doc.text(`Transaction ID: ${payslipData.transactionId}`, 100, finalY + 7);
+    
+    if (payslipData.transactions && payslipData.transactions.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Payment Transactions', 14, finalY);
+
+      const txnHeaders = [['Date', 'Type', 'Method', 'Transaction ID', 'Amount']];
+      const txnRows = payslipData.transactions.map(t => [
+        t.date || '',
+        t.type || '',
+        t.method || '',
+        t.id || '',
+        `Rs.${(t.amount || 0).toLocaleString('en-IN')}`
+      ]);
+
+      autoTable(doc, {
+        startY: finalY + 5,
+        head: txnHeaders,
+        body: txnRows,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [248, 250, 252],
+          textColor: [15, 23, 42],
+          fontSize: 8,
+          fontStyle: 'bold'
+        },
+        bodyStyles: {
+          fontSize: 8,
+          textColor: [51, 65, 85]
+        }
+      });
+    } else {
+      doc.setFillColor(248, 250, 252);
+      doc.rect(14, finalY, 182, 12, 'F');
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Payment Method: ${payslipData.paymentMethod}`, 20, finalY + 7);
+      if (payslipData.transactionId) {
+        doc.text(`Transaction ID: ${payslipData.transactionId}`, 100, finalY + 7);
+      }
     }
 
     // Corporate Footer

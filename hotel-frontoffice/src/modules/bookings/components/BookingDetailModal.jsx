@@ -53,9 +53,9 @@ const BookingDetailModal = ({ isOpen, onClose, booking, onCheckIn, onCheckOut, o
         className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up flex flex-col max-h-[90vh]" 
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <div>
+        {/* Modal Header */}
+        <div className="flex justify-between items-start md:items-center gap-4 px-4 md:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex-1">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-bold text-slate-900">Reservation Details</h3>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusTagClass(booking.status)}`}>

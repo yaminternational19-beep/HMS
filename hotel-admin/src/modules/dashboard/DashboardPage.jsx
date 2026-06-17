@@ -132,8 +132,8 @@ const DashboardPage = () => {
             </button>
           </div>
 
-          <div className="table-container">
-            <table className="table-element">
+          <div className="table-container overflow-x-auto w-full">
+            <table className="table-element min-w-[800px]">
               <thead>
                 <tr>
                   <th>Guest / Payer</th>

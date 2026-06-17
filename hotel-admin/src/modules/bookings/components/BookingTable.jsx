@@ -40,8 +40,8 @@ const BookingTable = ({
   };
 
   return (
-    <div className={`table-container ${className}`}>
-      <table className="table-element">
+    <div className={`table-container w-full overflow-x-auto ${className}`}>
+      <table className="table-element min-w-[800px]">
         <thead>
           <tr>
             <th className="w-12 text-center">

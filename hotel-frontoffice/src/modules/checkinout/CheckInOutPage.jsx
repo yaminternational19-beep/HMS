@@ -4,6 +4,7 @@ import CheckInList from './components/CheckInList';
 import CheckOutList from './components/CheckOutList';
 import { getBookingsList, updateBooking, getBookingPayslip } from '../../api/booking';
 import { exportPayslipToPDF } from '../bookings/services/bookingExport.service';
+import PaymentModal from './components/PaymentModal';
 import { useToastStore } from '../../store/useToastStore';
 import { MdLogin, MdLogout } from 'react-icons/md';
 import Pagination from '../../components/Pagination';
@@ -22,6 +23,9 @@ const CheckInOutPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPaymentGuest, setSelectedPaymentGuest] = useState(null);
   
   const addToast = useToastStore((state) => state.addToast);
 
@@ -168,6 +172,44 @@ const CheckInOutPage = () => {
     }
   };
 
+  const handlePayBalanceClick = (guest) => {
+    setSelectedPaymentGuest(guest);
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentSubmit = async (paymentData) => {
+    try {
+      const { paymentMethod, transactionId, amountToPay } = paymentData;
+      const guest = selectedPaymentGuest;
+      if (!guest) return;
+
+      const rawData = guest.raw.rawData || guest.raw.raw || {};
+      const payDetails = rawData.paymentDetails || {};
+      
+      const newAdvance = (parseFloat(payDetails.advancePaid) || 0) + amountToPay;
+      
+      const updatedRawData = {
+        ...rawData,
+        paymentDetails: {
+          ...payDetails,
+          advancePaid: newAdvance,
+          paymentMethod: paymentMethod,
+          transactionId: transactionId || payDetails.transactionId,
+        }
+      };
+
+      const response = await updateBooking(guest.id, { rawData: updatedRawData });
+      if (response && response.success) {
+        addToast(`Balance of ₹${amountToPay.toLocaleString()} settled for ${guest.guestName} via ${paymentMethod}.`, 'success');
+        setPaymentModalOpen(false);
+        fetchOpsData();
+      }
+    } catch (error) {
+      console.error('Failed to update payment:', error);
+      addToast(error?.response?.data?.message || 'Failed to update payment balance.', 'error');
+    }
+  };
+
   return (
     <div className="ops-page animate-fade-in">
 
@@ -230,7 +272,11 @@ const CheckInOutPage = () => {
           </>
         ) : (
           <>
-            <CheckOutList departures={departures} onCheckOut={handleCheckOut} />
+            <CheckOutList 
+              departures={departures} 
+              onCheckOut={handleCheckOut} 
+              onPayBalance={handlePayBalanceClick}
+            />
             <Pagination
               currentPage={currentPage}
               totalItems={totalDeparturesItems}
@@ -242,6 +288,12 @@ const CheckInOutPage = () => {
         )}
       </div>
 
+      <PaymentModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        guest={selectedPaymentGuest}
+        onSubmit={handlePaymentSubmit}
+      />
     </div>
   );
 };

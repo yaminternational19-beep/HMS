@@ -388,7 +388,7 @@ def invoice_list(request):
 
             line_items = [
                 {
-                    "description": f"Room Rent ({nights} night{'s' if nights > 1 else ''} × ₹{booking.room.price if booking.room else room_rent:.2f})",
+                    "description": f"Room Rent ({nights} day{'s' if nights > 1 else ''} × Rs. {booking.room.price if booking.room else room_rent:.2f})",
                     "amount": room_rent
                 }
             ]
@@ -399,6 +399,16 @@ def invoice_list(request):
                 })
 
             invoice_id = invoice_number if invoice_number else f"INV-{booking.booking_code}"
+
+            txn_list = []
+            for txn in booking.transactions.all().order_by('created_at'):
+                txn_list.append({
+                    "type": txn.transaction_type,
+                    "amount": float(txn.amount),
+                    "method": txn.payment_method,
+                    "id": txn.transaction_id,
+                    "date": txn.created_at.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d %I:%M %p')
+                })
 
             invoices.append({
                 "id": invoice_id,
@@ -421,7 +431,8 @@ def invoice_list(request):
                 "paymentMethod": payment_method,
                 "issuedDate": issued_date_str,
                 "paidDate": paid_date,
-                "raw": booking.raw_data or {}
+                "raw": booking.raw_data or {},
+                "transactions": txn_list
             })
 
         return success_response(

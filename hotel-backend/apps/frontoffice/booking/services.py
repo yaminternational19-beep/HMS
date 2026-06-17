@@ -779,6 +779,17 @@ class BookingService:
             if nights <= 0:
                 nights = 1
 
+        # Fetch actual transactions if any exist
+        transactions = []
+        for txn in booking.transactions.all().order_by('created_at'):
+            transactions.append({
+                "type": txn.transaction_type,
+                "amount": float(txn.amount),
+                "method": txn.payment_method,
+                "id": txn.transaction_id,
+                "date": txn.created_at.astimezone(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d %I:%M %p')
+            })
+
         return {
             "buildingName": "SNOWLINE BLOOM",
             "serviceName": "Front Desk Reservation & Lodging Service",
@@ -802,4 +813,5 @@ class BookingService:
             "paymentMethod": payment_method,
             "transactionId": transaction_id,
             "status": booking.status,
+            "transactions": transactions,
         }

@@ -325,8 +325,8 @@ const StaffLogsPage = () => {
         ) : activeTab === 'chronological' ? (
           /* CHRONOLOGICAL LOGS TABLE */
           <>
-            <div className="table-container !shadow-none !border-none !rounded-none">
-              <table className="table-element">
+            <div className="table-container !shadow-none !border-none !rounded-none w-full overflow-x-auto">
+              <table className="table-element min-w-[800px]">
                 <thead>
                   <tr>
                     <th>Staff ID</th>
@@ -421,8 +421,8 @@ const StaffLogsPage = () => {
         ) : (
           /* DAILY SUMMARY GROUPING TABLE */
           <>
-            <div className="table-container !shadow-none !border-none !rounded-none">
-              <table className="table-element">
+            <div className="table-container !shadow-none !border-none !rounded-none w-full overflow-x-auto">
+              <table className="table-element min-w-[800px]">
                 <thead>
                   <tr>
                     <th>Date</th>

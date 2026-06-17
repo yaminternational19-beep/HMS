@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, Search, Settings, Globe, ShieldCheck } from 'lucide-react';
+import { Bell, Search, Settings, Globe, ShieldCheck, Menu } from 'lucide-react';
 
 const routeTitleMap = {
   '/': 'Admin Dashboard Overview',
@@ -11,17 +11,25 @@ const routeTitleMap = {
   '/reports': 'Enterprise Systems Analytics',
 };
 
-const Navbar = () => {
+const Navbar = ({ onMenuToggle }) => {
   const location = useLocation();
   const currentTitle = routeTitleMap[location.pathname] || 'SNOWLINE BLOOM Administration';
 
   return (
-    <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-20">
+    <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-20">
       {/* Page Title & Context */}
       <div className="flex flex-col">
-        <h1 className="text-xl font-bold text-slate-800 tracking-tight leading-none">
-          {currentTitle}
-        </h1>
+        <div className="flex items-center gap-3">
+          <button 
+            className="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100"
+            onClick={onMenuToggle}
+          >
+            <Menu size={24} />
+          </button>
+          <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight leading-none truncate max-w-[200px] md:max-w-none">
+            {currentTitle}
+          </h1>
+        </div>
         <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-400 font-medium">
           <ShieldCheck size={14} className="text-accent" />
           <span>HMS Secure Core</span>

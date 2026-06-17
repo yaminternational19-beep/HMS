@@ -25,7 +25,7 @@ const navLinks = [
   // { label: 'Reports & Stats', path: '/reports', icon: <BarChart3 size={20} /> },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -39,12 +39,23 @@ const Sidebar = () => {
   const userInitials = userEmail.split('@')[0].substring(0, 2).toUpperCase();
 
   return (
-    <aside
-      className={`
-        flex flex-col bg-primary text-white h-screen transition-all duration-300 z-30 shadow-2xl border-r border-slate-800 shrink-0
-        ${collapsed ? 'w-16' : 'w-64'}
-      `}
-    >
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+      
+      <aside
+        className={`
+          flex flex-col bg-primary text-white h-screen transition-all duration-300 z-50 shadow-2xl border-r border-slate-800 shrink-0
+          fixed md:relative
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          ${collapsed ? 'w-16' : 'w-64'}
+        `}
+      >
       {/* Logo & Toggle */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-slate-800 shrink-0">
         {!collapsed && (
@@ -119,6 +130,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
+    </>
   );
 };
 

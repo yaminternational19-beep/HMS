@@ -84,11 +84,8 @@ const InvoiceTable = ({ invoices, onView, selectedIds = [], onToggleSelectAll = 
                 </td>
                 <td className="inv-table-td whitespace-nowrap">
                   <div className="flex flex-col gap-1">
-                    <span className="inline-flex items-center self-start px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded text-[10px] font-black uppercase tracking-wider">
-                      {inv.nights} Night{inv.nights > 1 ? 's' : ''}
-                    </span>
-                    <span className="inline-flex items-center self-start px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[10px] font-black uppercase tracking-wider">
-                      {inv.nights + 1} Day{inv.nights + 1 > 1 ? 's' : ''}
+                    <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md font-bold uppercase tracking-wider block text-center shadow-sm">
+                      {inv.nights} Day{inv.nights > 1 ? 's' : ''}
                     </span>
                   </div>
                 </td>

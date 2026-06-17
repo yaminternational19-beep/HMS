@@ -223,8 +223,8 @@ const Dashboard = () => {
           {/* Recent Bookings Table */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-xl font-bold text-text-main mb-6">Recent Bookings</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left min-w-[600px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-text-muted">
                     <th className="pb-3 font-semibold">Booking ID</th>
